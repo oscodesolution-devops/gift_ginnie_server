@@ -2,13 +2,18 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from ratings.models import ProductRating
 from django.db.models import Avg, Count, F, Q
+import cloudinary
+import cloudinary.uploader
 from .models import CarouselItem, Product, ProductCategory, ProductImage
 from .serializers import (
+    AddProductImageSerializer,
+    AddProductSerializer,
     CarouselItemSerializer,
     CategorySerializer,
+    DeleteProductImagesSerializer,
     PopularCategorySerializer,
     PopularProductSerializer,
     ProductSerializer,
@@ -26,6 +31,23 @@ class CarouselView(APIView):
             status=status.HTTP_200_OK,
         )
 
+class DeleteProductImagesView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = DeleteProductImagesSerializer(data=request.data)
+            if serializer.is_valid():
+                product_image_ids = request.data.get("product_image_ids")
+                product_images = ProductImage.objects.filter(id__in=product_image_ids)
+                for product_image in product_images:
+                    cloudinary.uploader.destroy(product_image.image.public_id, invalidate=True)
+                    product_image.delete()
+                return Response({"message": "Product image deleted successfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class PopularProductsView(APIView):
     permissiono_classes = [IsAuthenticated]
@@ -75,7 +97,6 @@ class PopularCategoriesView(APIView):
                     category_description=F("product__category__description"),
                     image=F("product__category__image"),
                 )
-               
                 .order_by("-average_rating")[:10]
             )
             serializer = PopularCategorySerializer(popular_categories, many=True)
@@ -95,28 +116,54 @@ class PopularCategoriesView(APIView):
             )
 
 
+class AddProductView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        serializer = AddProductSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Product added successfully.",
+                    "data": serializer.data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(
+            {
+                "message": "Product not added.",
+                "data": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class AddProductImagesView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        serializer = AddProductImageSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Product images added successfully.",
+                    "data": serializer.data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(
+            {
+                "message": "Product image not added.",
+                "data": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class AllProductsView(APIView):
     permission_classes = [IsAuthenticated]
-
-    # def post(self, request):
-
-    #     serializer = ProductSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(
-    #             {
-    #                 "message": "Product added successfully.",
-    #                 "data": serializer.data,
-    #             },
-    #             status=status.HTTP_201_CREATED,
-    #         )
-    #     return Response(
-    #         {
-    #             "message": "Product not added.",
-    #             "data": serializer.errors,
-    #         },
-    #         status=status.HTTP_400_BAD_REQUEST,
-    #     )
 
     def get(self, request):
         try:
@@ -167,10 +214,11 @@ class ProductView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
 class AllCategoriesView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self,request):
+    def get(self, request):
         try:
             query_set = ProductCategory.objects.all()
             serializer = CategorySerializer(query_set, many=True)

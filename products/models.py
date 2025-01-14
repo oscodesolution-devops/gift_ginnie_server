@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from django.db import models
 from cloudinary.models import CloudinaryField
 
@@ -37,25 +38,25 @@ class Product(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
     category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE)
-    images = models.ManyToManyField("ProductImage", related_name="products")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Products"
 
-    def __str__(self):
-        return self.name
+    
 
 
 class ProductImage(models.Model):
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, blank=True, null=True
+        Product, on_delete=models.CASCADE, blank=True, null=True, related_name="images"
     )
     image = CloudinaryField("product_image")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Product Image"
         verbose_name_plural = "Product Images"
 
-    def __str__(self):
-        return self.product.name

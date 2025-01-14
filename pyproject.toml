@@ -14,4 +14,5 @@ dependencies = [
     "ruff>=0.8.4",
     "requests>=2.32.3",
     "cloudinary>=1.42.1",
+    "pillow>=11.1.0",
 ]
