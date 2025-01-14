@@ -5,15 +5,23 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from ratings.models import ProductRating
 from django.db.models import Avg, Count, F, Q
+from django.shortcuts import get_object_or_404
 import cloudinary
 import cloudinary.uploader
-from .models import CarouselItem, Product, ProductCategory, ProductImage
+from .models import (
+    CarouselItem,
+    FavouriteProduct,
+    Product,
+    ProductCategory,
+    ProductImage,
+)
 from .serializers import (
     AddProductImageSerializer,
     AddProductSerializer,
     CarouselItemSerializer,
     CategorySerializer,
     DeleteProductImagesSerializer,
+    FavouriteProductSerializer,
     PopularCategorySerializer,
     PopularProductSerializer,
     ProductSerializer,
@@ -31,6 +39,7 @@ class CarouselView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class DeleteProductImagesView(APIView):
     permission_classes = [IsAdminUser]
 
@@ -40,14 +49,28 @@ class DeleteProductImagesView(APIView):
             if serializer.is_valid():
                 product_image_ids = request.data.get("product_image_ids")
                 product_images = ProductImage.objects.filter(id__in=product_image_ids)
+                if not product_images:
+                    return Response(
+                        {"message": "No product image found"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 for product_image in product_images:
-                    cloudinary.uploader.destroy(product_image.image.public_id, invalidate=True)
+                    res = cloudinary.uploader.destroy(
+                        product_image.image.public_id, invalidate=True
+                    )
+                    # print(res)
                     product_image.delete()
-                return Response({"message": "Product image deleted successfully"}, status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "Product image deleted successfully"},
+                    status=status.HTTP_200_OK,
+                )
             else:
-                return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+                )
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PopularProductsView(APIView):
     permissiono_classes = [IsAuthenticated]
@@ -233,6 +256,184 @@ class AllCategoriesView(APIView):
             return Response(
                 {
                     "message": f"Error occurred while fetching all categories {e}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class CategoryView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, id):
+        try:
+            products = Product.objects.filter(category__id=id)
+            serializer = ProductSerializer(products, many=True)
+            return Response(
+                {
+                    "message": "Category found",
+                    "data": serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "message": f"Error occurred while fetching category {e}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def delete(self, request, id):
+        try:
+            category = ProductCategory.objects.get(id=id)
+            if category.image:
+                res = cloudinary.uploader.destroy(
+                    category.image.public_id, invalidate=True
+                )
+                print("category image removed", res)
+            category.delete()
+            return Response(
+                {
+                    "message": f"Category {category.name} deleted successfully",
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "message": f"Error occurred while deleting category {e}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def patch(self, request, id):
+        try:
+            category = ProductCategory.objects.get(id=id)
+            serializer = CategorySerializer(category, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                        "message": f"Category {serializer.data['name']} updated successfully",
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "message": f"Error occurred while updating category",
+                        "data": serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except Exception as e:
+            return Response(
+                {
+                    "message": f"Error occurred while updating category {e}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class CategoryViewCREATE(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        try:
+            serializer = CategorySerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                        "message": f"Category {serializer.data['name']} created successfully",
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
+                return Response(
+                    {
+                        "message": f"Error occurred while creating category",
+                        "data": serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except Exception as e:
+            return Response(
+                {
+                    "message": f"Error occurred while creating category {e}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class FavouriteProductView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user = request.user
+            favourite_products = FavouriteProduct.objects.filter(user=user)
+            serializer = FavouriteProductSerializer(favourite_products, many=True)
+            return Response(
+                {
+                    "message": "Favourite products retrieved successfully",
+                    "data": serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "message": f"Error occurred while retrieving favourite products {e}",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def post(self, request):
+        try:
+            product_id = request.data.get("id")
+            serializer = FavouriteProductSerializer(data=request.data)
+
+            if serializer.is_valid():
+                product = Product.objects.get(id=product_id)
+                if product:
+                    user = request.user
+                    favourite_product = FavouriteProduct.objects.filter(
+                        user=user, product=product
+                    )
+                    if favourite_product:
+                        favourite_product.delete()
+                        return Response(
+                            {
+                                "message": f"Product {product.name} unfavourited successfully",
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+                    else:
+                        serializer = FavouriteProductSerializer(data=request.data)
+                        favourite_product = FavouriteProduct(user=user, product=product)
+                        favourite_product.save()
+                    return Response(
+                        {
+                            "message": f"Product {product.name} favourited successfully",
+                        },
+                        status=status.HTTP_201_CREATED,
+                    )
+
+            else:
+                return Response(
+                    {"message": "Validation error", "data": serializer.errors}
+                )
+        except Product.DoesNotExist:
+            return Response(
+                {"message": "product not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "message": f"Error occurred while favouriting product {e}",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )

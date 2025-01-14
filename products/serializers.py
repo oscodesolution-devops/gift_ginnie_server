@@ -2,7 +2,15 @@ from rest_framework import serializers
 from django.db.models import Avg, Count
 from giftginnie.global_serializers import CloudinaryImage
 from ratings.models import ProductRating
-from .models import CarouselItem, Product, ProductCategory, ProductImage
+from .models import (
+    CarouselItem,
+    FavouriteProduct,
+    Product,
+    ProductCategory,
+    ProductImage,
+)
+import cloudinary
+import cloudinary.uploader
 
 
 class PopularCategorySerializer(serializers.Serializer):
@@ -23,11 +31,39 @@ class CarouselItemSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    image = CloudinaryImage()
+    image = CloudinaryImage(read_only=True)
+    category_image = serializers.ImageField(write_only=True)
 
     class Meta:
         model = ProductCategory
-        fields = ["id", "name", "description", "image"]
+        fields = ["id", "name", "description", "image", "category_image"]
+        read_only_fields = ["id", "image"]
+
+    def create(self, validated_data):
+        product = ProductCategory.objects.get_or_404(id=validated_data.pop("id"))
+        if product.image:
+            res = cloudinary.uploader.destroy(product.image.public_id, invalidate=True)
+            print("category image removed", res)
+        validated_data["image"] = validated_data.pop("category_image")
+        return ProductCategory.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        if "category_image" in validated_data:
+            if instance.image:
+                res = cloudinary.uploader.destroy(
+                    instance.image.public_id, invalidate=True
+                )
+                print("Category image removed:", res)
+
+            # Replace the `image` field with the new one
+            instance.image = validated_data.pop("category_image")
+
+        # Update other fields
+        instance.name = validated_data.get("name", instance.name)
+        instance.description = validated_data.get("description", instance.description)
+        instance.save()
+
+        return instance
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -88,7 +124,7 @@ class AddProductImageSerializer(serializers.Serializer):
     def validate_images(self, value):
         """
         Validates the images field for constraints:
-        - Check if product already has existing images. 
+        - Check if product already has existing images.
         - Ensure the new images meet the 3 to 6 count requirement.
         """
 
@@ -114,13 +150,13 @@ class AddProductImageSerializer(serializers.Serializer):
                     f"Adding these images exceeds the limit. {6 - existing_images_count} more images allowed."
                 )
             if total_images < 3:
-                raise serializers.ValidationError("A product must have at least 3 images.")
+                raise serializers.ValidationError(
+                    "A product must have at least 3 images."
+                )
 
             return value
         except Product.DoesNotExist:
             raise serializers.ValidationError("Product does not exist.")
-        
-
 
     def create(self, validated_data):
         """
@@ -128,19 +164,18 @@ class AddProductImageSerializer(serializers.Serializer):
         """
         try:
             product_id = self.initial_data.get("product_id")
-            validated_data['product'] = Product.objects.get(id=product_id)
+            validated_data["product"] = Product.objects.get(id=product_id)
             images = validated_data["images"]
 
             product_images = []
             for image in images:
                 product_images.append(ProductImage(product=product, image=image))
-                print(product.name,product_images)
             ProductImage.objects.bulk_create(product_images)
 
             return product
         except Product.DoesNotExist:
             raise serializers.ValidationError("Product does not exist.")
-        
+
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
@@ -155,8 +190,6 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "category", "images"]
         write_only_fields = ["category_id"]
 
-
-
     def create(self, validated_data):
         validated_data["category"] = ProductCategory.objects.get(
             id=validated_data["category_id"]
@@ -164,8 +197,19 @@ class ProductSerializer(serializers.ModelSerializer):
         validated_data.pop("category_id")
         return Product.objects.create(**validated_data)
 
+
 class DeleteProductImagesSerializer(serializers.ModelSerializer):
     product_image_ids = serializers.ListField(child=serializers.IntegerField())
+
     class Meta:
         model = ProductImage
         fields = ["product_image_ids"]
+
+
+class FavouriteProductSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = FavouriteProduct
+        fields = ["id", "product"]
+        read_only_fields = ["product"]

@@ -5,15 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('products', '0012_remove_product_images'),
+        ("products", "0012_remove_product_images"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='productimage',
-            name='product',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='images', to='products.product'),
+            model_name="productimage",
+            name="product",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="images",
+                to="products.product",
+            ),
         ),
     ]

@@ -5,7 +5,10 @@ from .views import (
     AllCategoriesView,
     AllProductsView,
     CarouselView,
+    CategoryView,
+    CategoryViewCREATE,
     DeleteProductImagesView,
+    FavouriteProductView,
     PopularCategoriesView,
     ProductView,
     PopularProductsView,
@@ -29,10 +32,24 @@ urlpatterns = [
         PopularCategoriesView.as_view(),
         name="popular-categories",
     ),
-    path("products/deleteImages/",DeleteProductImagesView.as_view() ,name="delete-images"),
-    # path("products/categories/deleteImages/", name="delete-images-categories"),
+    path(
+        "products/deleteImages/",
+        DeleteProductImagesView.as_view(),
+        name="delete-images",
+    ),
+    path(
+        "products/categories/<int:id>/", CategoryView.as_view(), name="category-details"
+    ),
+    path(
+        "products/categories/create/",
+        CategoryViewCREATE.as_view(),
+        name="create-category",
+    ),
     path("products/carausel-items/", CarouselView.as_view(), name="carousel-items"),
     path("products/<int:id>/", ProductView.as_view(), name="product-detail"),
     path("products/", AllProductsView.as_view(), name="all-products"),
     path("products/categories/", AllCategoriesView.as_view(), name="all-categories"),
+    path(
+        "products/favourite/", FavouriteProductView.as_view(), name="favourite-products"
+    ),
 ]
