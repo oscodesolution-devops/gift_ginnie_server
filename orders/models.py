@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils.timezone import now
 
 class Order(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
@@ -37,6 +37,8 @@ class Coupon(models.Model):
     is_active = models.BooleanField(default=True)
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()
+    max_usage = models.PositiveIntegerField(null=True, blank=True)  # Global limit
+    max_usage_per_user = models.PositiveIntegerField(null=True, blank=True)  # Per user limit
 
     class Meta:
         verbose_name = "Coupon"
@@ -45,27 +47,37 @@ class Coupon(models.Model):
     def __str__(self):
         return self.code
 
+class CouponUsage(models.Model):
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Coupon Usage"
+        verbose_name_plural = "Coupon Usages"
+        unique_together = ("user", "coupon")
+
 
 class Cart(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
-    product = models.ForeignKey("products.Product", on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
     coupon = models.ForeignKey(
-        "Coupon", null=True, blank=True, on_delete=models.SET_NULL
+        "Coupon", null=True, blank=True, on_delete=models.SET_NULL, related_name="carts"
     )
 
-    def calculate_total_price(self):
+    def calculate_original_price(self):
+        return sum(item.quantity * item.price for item in self.items.all())
+
+    def calculate_discounted_price(self):
         # Total price without discount
         total = sum(item.quantity * item.price for item in self.items.all())
-
         # Apply coupon discount if valid
-        if self.coupon:
+        if self.coupon and self.coupon.is_active and self.coupon.valid_from <= now() and self.coupon.valid_until >= now():
             if self.coupon.discount_type == "PERCENT":
                 total -= total * (self.coupon.discount_value / 100)
             elif self.coupon.discount_type == "FLAT":
                 total -= self.coupon.discount_value
 
+        print(total)
         return max(total, 0)  # Ensure the total doesn't go below 0
 
     class Meta:
@@ -73,15 +85,15 @@ class Cart(models.Model):
         verbose_name_plural = "Carts"
 
     def __str__(self):
-        return self.product.name + " - " + str(self.quantity)
+        return f"Cart for {self.user.username} with {self.items.count()} items"
 
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey("products.Product", on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.PositiveIntegerField()
     price = models.DecimalField(
-        max_digits=10, decimal_places=2
+        max_digits=10, decimal_places=2,
     )  # Product price at the time of addition
 
     class Meta:

@@ -138,37 +138,57 @@ class VerifyOTPView(APIView):
 class UserProfileUpdateView(UpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
 
-    def get(self):
-        return Response(
-            {
-                "message": "Profile fetched successfully.",
-                "data": self.get_object().profile,
-            },
-            status=status.HTTP_200_OK,
-        )
+    def get_queryset(self):
+        # Define a queryset for the logged-in user
+        return User.objects.filter(pk=self.request.user.pk)
+
+    def get_object(self):
+        # Ensure it retrieves the logged-in user
+        return self.request.user
+
 
     def update(self, request, *args, **kwargs):
         # Retrieve the user object
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-
-        # Serialize and validate the incoming data
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-
-        # Save the updates
-        self.perform_update(serializer)
-
-        # Construct the custom response
-        return Response(
-            {
-                "message": "Profile updated successfully",
-                "data": serializer.data,  # Return updated user data
-            },
-            status=status.HTTP_200_OK,
-        )
-
+        try:
+            partial = kwargs.pop("partial", False)  
+            instance = self.get_object()
+            if not request.data:
+                return Response(
+                    {
+                        "message":"No data provided"
+                    }
+                )
+            # Serialize and validate the incoming data
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            if serializer.is_valid():
+                serializer.save()
+                self.perform_update(serializer)
+                return Response(
+                    {
+                        "message": "Profile updated successfully",
+                        "data": serializer.data,  # Return updated user data
+                    },
+                    status=status.HTTP_200_OK,
+                )
+          
+            else:
+                return Response(
+                    {
+                        "message": "Profile update failed",
+                        "data": serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except Exception as e:
+            return Response(
+                {
+                    "message": "Profile update failed",
+                    "data": str(e),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -260,7 +280,7 @@ class AddressView(APIView):
 
     def delete(self, request, *args, **kwargs):
         user = request.user
-        address_id = request.data.get("id")
+        address_id:int = request.data.get("id")
         if not address_id:
             return Response(
                 {"message": "Address ID is required."},
