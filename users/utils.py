@@ -71,6 +71,7 @@ def send_otp(
                     "status": 506,
                     "verificationId": response.json()["data"]["verificationId"],
                 }
+
             else:
                 return False
         else:

@@ -5,27 +5,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('orders', '0002_coupon_remove_cart_created_at_and_more'),
+        ("orders", "0002_coupon_remove_cart_created_at_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='cart',
-            name='price',
+            model_name="cart",
+            name="price",
         ),
         migrations.RemoveField(
-            model_name='cart',
-            name='product',
+            model_name="cart",
+            name="product",
         ),
         migrations.RemoveField(
-            model_name='cart',
-            name='quantity',
+            model_name="cart",
+            name="quantity",
         ),
         migrations.AlterField(
-            model_name='cart',
-            name='coupon',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='carts', to='orders.coupon'),
+            model_name="cart",
+            name="coupon",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="carts",
+                to="orders.coupon",
+            ),
         ),
     ]

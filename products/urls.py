@@ -12,15 +12,32 @@ from .views import (
     PopularCategoriesView,
     ProductView,
     PopularProductsView,
+    SearchProductListAPIView,
+    UpdateDeleteProductView,
 )
 
 
 urlpatterns = [
+    path(
+        "products/carausel-items/",
+        CarouselView.as_view(),
+        name="carousel-items-get-post",
+    ),
+    path(
+        "products/carausel-items/<int:id>/",
+        CarouselView.as_view(),
+        name="carousel-items-patch-delete",
+    ),
     path("products/add/", AddProductView.as_view(), name="add-product"),
     path(
         "products/add/images/",
         AddProductImagesView.as_view(),
         name="add-product-images",
+    ),
+    path(
+        "products/updateDelete/<int:id>/",
+        UpdateDeleteProductView.as_view(),
+        name="update-delete-product",
     ),
     path(
         "products/popular-products/",
@@ -51,5 +68,10 @@ urlpatterns = [
     path("products/categories/", AllCategoriesView.as_view(), name="all-categories"),
     path(
         "products/favourite/", FavouriteProductView.as_view(), name="favourite-products"
+    ),
+    path(
+        "products/searchProducts",
+        SearchProductListAPIView.as_view(),
+        name="search-products",
     ),
 ]

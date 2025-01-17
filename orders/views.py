@@ -17,8 +17,10 @@ class CartView(APIView):
         try:
             cart = Cart.objects.filter(user=request.user).first()
             if not cart:
-                return Response({"message": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
-            
+                return Response(
+                    {"message": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
+                )
+
             serializer = CartSerializer(cart)
             return Response(
                 {"message": "Cart fetched successfully.", "data": serializer.data},
@@ -31,7 +33,6 @@ class CartView(APIView):
             )
 
 
-
 class ApplyCouponView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -40,30 +41,51 @@ class ApplyCouponView(APIView):
         try:
             cart = Cart.objects.filter(user=request.user).first()
             if not cart:
-                return Response({"message": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"message": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
+                )
 
-            coupon_code = request.data.get('code')
+            coupon_code = request.data.get("code")
             if not coupon_code:
-                return Response({"message": "Coupon code is required."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "Coupon code is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             coupon = Coupon.objects.filter(code=coupon_code, is_active=True).first()
             if not coupon:
-                return Response({"message": "Invalid or inactive coupon."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "Invalid or inactive coupon."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Check if the coupon is valid
             if coupon.valid_from > now() or coupon.valid_until < now():
-                return Response({"message": "This coupon is not valid at this time."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "This coupon is not valid at this time."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Check global usage limit
             global_usage_count = CouponUsage.objects.filter(coupon=coupon).count()
             if coupon.max_usage and global_usage_count >= coupon.max_usage:
-                return Response({"message": "This coupon has reached its usage limit."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "This coupon has reached its usage limit."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Check per-user usage limit
-            user_usage_count = CouponUsage.objects.filter(coupon=coupon, user=request.user).count()
-            if coupon.max_usage_per_user and user_usage_count >= coupon.max_usage_per_user:
+            user_usage_count = CouponUsage.objects.filter(
+                coupon=coupon, user=request.user
+            ).count()
+            if (
+                coupon.max_usage_per_user
+                and user_usage_count >= coupon.max_usage_per_user
+            ):
                 return Response(
-                    {"message": f"You have reached your usage limit for this coupon ({coupon.max_usage_per_user})."},
+                    {
+                        "message": f"You have reached your usage limit for this coupon ({coupon.max_usage_per_user})."
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -73,21 +95,29 @@ class ApplyCouponView(APIView):
             cart.save()
 
             return Response(
-                {"message": "Coupon applied successfully.", "data": {"coupon": coupon.code}},
+                {
+                    "message": "Coupon applied successfully.",
+                    "data": {"coupon": coupon.code},
+                },
                 status=status.HTTP_200_OK,
             )
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+
     def delete(self, request):
         """Remove a coupon from the cart."""
         try:
             cart = Cart.objects.filter(user=request.user).first()
             if not cart:
-                return Response({"message": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"message": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
+                )
 
             if not cart.coupon:
-                return Response({"message": "No coupon applied to the cart."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"message": "No coupon applied to the cart."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Remove coupon from the cart
             cart.coupon = None
@@ -103,7 +133,7 @@ class ApplyCouponView(APIView):
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-     
+
 class CartItemView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -115,13 +145,16 @@ class CartItemView(APIView):
 
             # Prepare data for the serializer
             data = request.data.copy()
-            data['cart'] = user_cart.id
+            data["cart"] = user_cart.id
 
             serializer = CartItemSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(
-                    {"message": "Item added to cart successfully.", "data": serializer.data},
+                    {
+                        "message": "Item added to cart successfully.",
+                        "data": serializer.data,
+                    },
                     status=status.HTTP_201_CREATED,
                 )
             return Response(
@@ -142,13 +175,18 @@ class CartItemView(APIView):
                 return Response(
                     {"message": "No data provided."}, status=status.HTTP_400_BAD_REQUEST
                 )
-            cart_item = get_object_or_404(CartItem, id=cart_item_id, cart__user=request.user)
+            cart_item = get_object_or_404(
+                CartItem, id=cart_item_id, cart__user=request.user
+            )
 
             serializer = CartItemSerializer(cart_item, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(
-                    {"message": "Cart item updated successfully.", "data": serializer.data},
+                    {
+                        "message": "Cart item updated successfully.",
+                        "data": serializer.data,
+                    },
                     status=status.HTTP_200_OK,
                 )
             return Response(
@@ -157,17 +195,21 @@ class CartItemView(APIView):
             )
         except CartItem.DoesNotExist:
             return Response(
-                {"message": "Cart item does not exist."}, status=status.HTTP_404_NOT_FOUND
+                {"message": "Cart item does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return Response(
                 {"message": "Failed to update cart item.", "errors": e.args},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
     def delete(self, request, cart_item_id):
         """Delete an item from the cart."""
         # Retrieve and delete the cart item
-        cart_item = get_object_or_404(CartItem, id=cart_item_id, cart__user=request.user)
+        cart_item = get_object_or_404(
+            CartItem, id=cart_item_id, cart__user=request.user
+        )
         cart_item.delete()
         return Response(
             {"message": "Item removed from cart successfully."},

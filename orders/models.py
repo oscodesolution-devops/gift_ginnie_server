@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.timezone import now
 
+
 class Order(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     product = models.ForeignKey("products.Product", on_delete=models.CASCADE)
@@ -38,7 +39,9 @@ class Coupon(models.Model):
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()
     max_usage = models.PositiveIntegerField(null=True, blank=True)  # Global limit
-    max_usage_per_user = models.PositiveIntegerField(null=True, blank=True)  # Per user limit
+    max_usage_per_user = models.PositiveIntegerField(
+        null=True, blank=True
+    )  # Per user limit
 
     class Meta:
         verbose_name = "Coupon"
@@ -46,6 +49,7 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+
 
 class CouponUsage(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
@@ -71,7 +75,12 @@ class Cart(models.Model):
         # Total price without discount
         total = sum(item.quantity * item.price for item in self.items.all())
         # Apply coupon discount if valid
-        if self.coupon and self.coupon.is_active and self.coupon.valid_from <= now() and self.coupon.valid_until >= now():
+        if (
+            self.coupon
+            and self.coupon.is_active
+            and self.coupon.valid_from <= now()
+            and self.coupon.valid_until >= now()
+        ):
             if self.coupon.discount_type == "PERCENT":
                 total -= total * (self.coupon.discount_value / 100)
             elif self.coupon.discount_type == "FLAT":
@@ -93,7 +102,8 @@ class CartItem(models.Model):
     product = models.ForeignKey("products.Product", on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(
-        max_digits=10, decimal_places=2,
+        max_digits=10,
+        decimal_places=2,
     )  # Product price at the time of addition
 
     class Meta:

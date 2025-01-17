@@ -26,11 +26,11 @@ class CartItemSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), source="product", write_only=True
     )
+
     class Meta:
         model = CartItem
-        fields = ["id","cart" ,"product","product_id","quantity","price"]
-        read_only_fields = ["id","product"]
-
+        fields = ["id", "cart", "product", "product_id", "quantity", "price"]
+        read_only_fields = ["id"]
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -40,9 +40,19 @@ class CartSerializer(serializers.ModelSerializer):
     discounted_price = serializers.SerializerMethodField()
     discount_percentage = serializers.SerializerMethodField()
     original_price = serializers.SerializerMethodField()
+
     class Meta:
         model = Cart
-        fields = ["id", "user", "coupon", "items","total_items", "original_price", "discounted_price", "discount_percentage"]
+        fields = [
+            "id",
+            "user",
+            "coupon",
+            "items",
+            "total_items",
+            "original_price",
+            "discounted_price",
+            "discount_percentage",
+        ]
 
     def get_total_items(self, obj):
         return obj.items.count()

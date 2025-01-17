@@ -23,11 +23,35 @@ class PopularCategorySerializer(serializers.Serializer):
 
 
 class CarouselItemSerializer(serializers.ModelSerializer):
-    image = CloudinaryImage()
+    image = CloudinaryImage(read_only=True)
+    carausel_image = serializers.ImageField(write_only=True)
 
     class Meta:
         model = CarouselItem
-        fields = ["id", "title", "description", "image", "link"]
+        fields = [
+            "id",
+            "title",
+            "description",
+            "image",
+            "link",
+            "carausel_image",
+            "is_active",
+        ]
+        read_only_fields = ["id"]
+
+    def create(self, validated_data):
+        validated_data["image"] = validated_data.pop("carausel_image")
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if "carausel_image" in validated_data:
+            if instance.image:
+                res = cloudinary.uploader.destroy(
+                    instance.image.public_id, invalidate=True
+                )
+                print("carousel image removed", res)
+            validated_data["image"] = validated_data.pop("carausel_image")
+        return super().update(instance, validated_data)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -115,6 +139,28 @@ class AddProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(e)
 
 
+class UpdateProductSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=ProductCategory.objects.all(), source="category", write_only=True
+    )
+    images = ProductImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Product
+        fields = ["id", "name", "description", "category", "category_id", "images"]
+        read_only_fields = ["id", "category", "images"]
+        write_only_fields = ["category_id"]
+
+    def update(self, instance, validated_data):
+        if "category_id" in validated_data:
+            validated_data["category"] = ProductCategory.objects.get(
+                id=validated_data["category_id"]
+            )
+            validated_data.pop("category_id")
+        return super().update(instance, validated_data)
+
+
 class AddProductImageSerializer(serializers.Serializer):
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), source="product", write_only=True
@@ -175,6 +221,14 @@ class AddProductImageSerializer(serializers.Serializer):
             return product
         except Product.DoesNotExist:
             raise serializers.ValidationError("Product does not exist.")
+
+    def update(self, instance, validated_data):
+        if "images" in validated_data:
+            instancesImages = instance.images
+            for image in instancesImages:
+                cloudinary.uploader.destroy(image.image.public_id, invalidate=True)
+                image.delete()
+        return super().update(instance, validated_data)
 
 
 class ProductSerializer(serializers.ModelSerializer):

@@ -27,16 +27,22 @@ def get_tokens_for_user(user):
 
 
 ### [ TESTING ONLY ] ###
-def get_test_tokens_for_current_user():
-    refresh = RefreshToken.for_user(User.objects.first())
-    return {"refresh": str(refresh), "access": str(refresh.access_token)}
+def get_test_tokens_for_current_user(usertype):
+    if usertype == "admin":
+        refresh = RefreshToken.for_user(User.objects.filter(is_superuser=True).first())
+        return {"refresh": str(refresh), "access": str(refresh.access_token)}
+    else:
+        refresh = RefreshToken.for_user(User.objects.filter(is_superuser=False).first())
+        return {"refresh": str(refresh), "access": str(refresh.access_token)}
 
 
 class DummyTokenView(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request):
-        return Response(get_test_tokens_for_current_user(), status=status.HTTP_200_OK)
+    def get(self, request, usertype):
+        return Response(
+            get_test_tokens_for_current_user(usertype), status=status.HTTP_200_OK
+        )
 
 
 class SendOTPView(APIView):
@@ -148,20 +154,17 @@ class UserProfileUpdateView(UpdateAPIView):
         # Ensure it retrieves the logged-in user
         return self.request.user
 
-
     def update(self, request, *args, **kwargs):
         # Retrieve the user object
         try:
-            partial = kwargs.pop("partial", False)  
+            partial = kwargs.pop("partial", False)
             instance = self.get_object()
             if not request.data:
-                return Response(
-                    {
-                        "message":"No data provided"
-                    }
-                )
+                return Response({"message": "No data provided"})
             # Serialize and validate the incoming data
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=partial
+            )
             if serializer.is_valid():
                 serializer.save()
                 self.perform_update(serializer)
@@ -172,7 +175,7 @@ class UserProfileUpdateView(UpdateAPIView):
                     },
                     status=status.HTTP_200_OK,
                 )
-          
+
             else:
                 return Response(
                     {
@@ -189,6 +192,7 @@ class UserProfileUpdateView(UpdateAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
 
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -280,7 +284,7 @@ class AddressView(APIView):
 
     def delete(self, request, *args, **kwargs):
         user = request.user
-        address_id:int = request.data.get("id")
+        address_id: int = request.data.get("id")
         if not address_id:
             return Response(
                 {"message": "Address ID is required."},

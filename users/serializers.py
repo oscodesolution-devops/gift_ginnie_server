@@ -59,6 +59,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     addresses = CustomerAddressSerializer(many=True, read_only=False)
     profile_image = CloudinaryImage(read_only=True)
     image = serializers.ImageField(write_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -73,11 +74,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "gender",
             "date_joined",
             "addresses",
-            "image"
+            "image",
             # "image_url",
         ]
         read_only_fields = ["id", "date_joined", "profile_image"]
-    
 
     def update(self, instance, validated_data):
         if "image" in validated_data:

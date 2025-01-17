@@ -6,7 +6,7 @@ from cloudinary.models import CloudinaryField
 class CarouselItem(models.Model):
     title = models.CharField(max_length=255)  # Title for the carousel item
     description = models.TextField(blank=True, null=True)  # Optional description
-    imagelink = models.URLField(blank=True, null=True)  # Image for the carousel
+    image = CloudinaryField("carausel_image")  # Image for the carousel
     link = models.URLField(blank=True, null=True)  # Optional link for the item
     is_active = models.BooleanField(default=True)  # Only display active items
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for creation

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('orders', '0003_remove_cart_price_remove_cart_product_and_more'),
+        ("orders", "0003_remove_cart_price_remove_cart_product_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='cartitem',
-            name='quantity',
+            model_name="cartitem",
+            name="quantity",
             field=models.PositiveIntegerField(),
         ),
     ]
