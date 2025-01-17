@@ -32,7 +32,7 @@ from .serializers import (
 
 
 class CarouselView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request):
         carousel_items = CarouselItem.objects.filter(is_active=True)
@@ -129,7 +129,7 @@ class CarouselView(APIView):
 class DeleteProductImagesView(APIView):
     permission_classes = [IsAdminUser]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         if request.user.is_superuser or request.user.is_staff:
             try:
                 serializer = DeleteProductImagesSerializer(data=request.data)
