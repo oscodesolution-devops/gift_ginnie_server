@@ -72,7 +72,6 @@ class CartSerializer(serializers.ModelSerializer):
         qty = obj.items.aggregate(qty=models.Sum("quantity"))["qty"]
         return qty
 
-
     def get_discounted_price(self, obj):
         return obj.calculate_discounted_price()
 

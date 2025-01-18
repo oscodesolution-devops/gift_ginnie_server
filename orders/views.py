@@ -64,7 +64,7 @@ class ApplyCouponView(APIView):
             # Check if the coupon is valid
             if coupon.valid_from > now() or coupon.valid_until < now():
                 return Response(
-                    {"message": "This coupon is not valid at this time."},
+                    {"message": "This coupon is expired."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 

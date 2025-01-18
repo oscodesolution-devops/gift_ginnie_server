@@ -113,9 +113,7 @@ class Cart(models.Model):
                 total -= total * (self.coupon.discount_value / 100)
             elif self.coupon.discount_type == "FLAT":
                 total -= self.coupon.discount_value
-
-        print(total)
-        return max(total, 0)  # Ensure the total doesn't go below 0
+        return max(total, 0)
 
     class Meta:
         verbose_name = "Cart"

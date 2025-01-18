@@ -462,11 +462,9 @@ class CategoryView(APIView):
     def get(self, request, id):
         try:
             products = Product.objects.filter(category__id=id)
-            if not products:
-                return Response(
-                    {"message": f"The category_id {id} not found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+            category_exists = ProductCategory.objects.filter(id=id).exists()
+            if not category_exists:
+                return Response({"message":f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
             serializer = ProductSerializer(products, many=True)
             return Response(
                 {
@@ -487,10 +485,10 @@ class CategoryView(APIView):
         if request.user.is_superuser or request.user.is_staff:
             try:
                 category = ProductCategory.objects.get(id=id)
-                if category.image:
-                    res = cloudinary.uploader.destroy(
-                        category.image.public_id, invalidate=True
-                    )
+                if not category:
+                    return Response({"message":f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
+                if category.image and category.image.public_id:
+                    res = cloudinary.uploader.destroy(category.image.public_id, invalidate=True) 
                     print("category image removed", res)
                 category.delete()
                 return Response(
@@ -516,6 +514,8 @@ class CategoryView(APIView):
         if request.user.is_superuser or request.user.is_staff:
             try:
                 category = ProductCategory.objects.get(id=id)
+                if not category:
+                    return Response({"message":f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
                 serializer = CategorySerializer(
                     category, data=request.data, partial=True
                 )
