@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from orders.models import Cart, CartItem, Coupon
 from products.models import Product
+from django.db import models
 from products.serializers import ProductSerializer
 
 
@@ -29,8 +30,21 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ["id", "cart", "product", "product_id", "quantity", "price"]
-        read_only_fields = ["id"]
+        fields = [
+            "id",
+            "cart",
+            "product",
+            "product_id",
+            "quantity",
+            "price",
+        ]
+        read_only_fields = ["id", "price"]
+
+    def create(self, validated_data):
+        product = validated_data.get("product")
+        validated_data["price"] = product.price * validated_data["quantity"]
+        # Call the parent class's `create` method
+        return super().create(validated_data)
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -46,8 +60,8 @@ class CartSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "user",
-            "coupon",
             "items",
+            "coupon",
             "total_items",
             "original_price",
             "discounted_price",
@@ -55,7 +69,9 @@ class CartSerializer(serializers.ModelSerializer):
         ]
 
     def get_total_items(self, obj):
-        return obj.items.count()
+        qty = obj.items.aggregate(qty=models.Sum("quantity"))["qty"]
+        return qty
+
 
     def get_discounted_price(self, obj):
         return obj.calculate_discounted_price()

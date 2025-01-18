@@ -2,11 +2,13 @@ from django.utils.timezone import now
 from datetime import timezone
 from django.shortcuts import get_object_or_404, render
 from rest_framework.response import Response
+from django.db.models import F
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from orders.serializers import CartItemSerializer, CartSerializer
+from products.models import Product
 from .models import CouponUsage, Order, Cart, CartItem, Coupon
 
 
@@ -143,10 +145,22 @@ class CartItemView(APIView):
         try:
             user_cart, created = Cart.objects.get_or_create(user=request.user)
 
-            # Prepare data for the serializer
             data = request.data.copy()
             data["cart"] = user_cart.id
-
+            existing_item = CartItem.objects.filter(
+                cart=user_cart, product=data.get("product_id")
+            ).first()
+            product = Product.objects.get(id=data.get("product_id"))
+            if existing_item:
+                existing_item.quantity = F("quantity") + data.get("quantity")
+                existing_item.price = product.price * existing_item.quantity
+                existing_item.save()
+                existing_item.refresh_from_db()
+                serializer = CartItemSerializer(existing_item)
+                return Response(
+                    {"message": "Item Updated successfully", "data": serializer.data},
+                    status=status.HTTP_200_OK,
+                )
             serializer = CartItemSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()

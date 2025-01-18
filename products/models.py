@@ -42,7 +42,7 @@ class Product(models.Model):
     brand = models.CharField(max_length=100, blank=True, null=True)
     product_type = models.CharField(max_length=100, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2,default=0)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock = models.PositiveBigIntegerField(default=0)
 
     class Meta:
@@ -51,11 +51,12 @@ class Product(models.Model):
 
     def in_stock(self):
         return self.stock > 0
-    
+
     def average_rating(self):
         ratings = self.ratings.all()
         average_rating = ratings.aggregate(models.Avg("rating"))
         return average_rating["rating__avg"]
+
 
 class ProductImage(models.Model):
     product = models.ForeignKey(

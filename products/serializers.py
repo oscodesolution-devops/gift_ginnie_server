@@ -119,9 +119,23 @@ class AddProductSerializer(serializers.ModelSerializer):
     category_id = serializers.IntegerField(write_only=True)
     in_stock = serializers.SerializerMethodField(read_only=True)
     rating = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "category", "category_id", "price","images", "stock", "in_stock", "rating", "brand", "product_type"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "category",
+            "category_id",
+            "price",
+            "images",
+            "stock",
+            "in_stock",
+            "rating",
+            "brand",
+            "product_type",
+        ]
         read_only_fields = ["id", "category", "in_stock", "rating", "images"]
         write_only_fields = ["category_id", "stock"]
 
@@ -155,7 +169,18 @@ class UpdateProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "category", "category_id", "images", "price", "stock","brand", "product_type"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "category",
+            "category_id",
+            "images",
+            "price",
+            "stock",
+            "brand",
+            "product_type",
+        ]
         read_only_fields = ["id", "category", "images"]
         write_only_fields = ["category_id"]
 
@@ -166,6 +191,7 @@ class UpdateProductSerializer(serializers.ModelSerializer):
             )
             validated_data.pop("category_id")
         return super().update(instance, validated_data)
+
 
 class AddProductImageSerializer(serializers.Serializer):
     product_id = serializers.PrimaryKeyRelatedField(
@@ -228,6 +254,7 @@ class AddProductImageSerializer(serializers.Serializer):
         except Product.DoesNotExist:
             raise serializers.ValidationError("Product does not exist.")
 
+
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
@@ -236,24 +263,37 @@ class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
     in_stock = serializers.SerializerMethodField(read_only=True)
     rating = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "category", "category_id", "images", "in_stock", "rating", "price", "brand", "product_type"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "category",
+            "category_id",
+            "images",
+            "in_stock",
+            "rating",
+            "price",
+            "brand",
+            "product_type",
+        ]
         read_only_fields = ["id", "category", "images"]
         write_only_fields = ["category_id"]
-    
+
     def get_in_stock(self, obj):
         return obj.in_stock()
-    
+
     def get_rating(self, obj):
-        return obj.average_rating() 
+        return obj.average_rating()
 
     def create(self, validated_data):
         validated_data["category"] = ProductCategory.objects.get(
             id=validated_data["category_id"]
         )
         validated_data.pop("category_id")
-        product = Product.objects.create(**validated_data) 
+        product = Product.objects.create(**validated_data)
         return product
 
 

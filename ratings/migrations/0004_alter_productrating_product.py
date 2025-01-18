@@ -5,16 +5,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('products', '0016_remove_carouselitem_imagelink_carouselitem_image'),
-        ('ratings', '0003_remove_productrating_category'),
+        ("products", "0016_remove_carouselitem_imagelink_carouselitem_image"),
+        ("ratings", "0003_remove_productrating_category"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='productrating',
-            name='product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ratings', to='products.product'),
+            model_name="productrating",
+            name="product",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="ratings",
+                to="products.product",
+            ),
         ),
     ]

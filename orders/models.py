@@ -11,10 +11,24 @@ class Order(models.Model):
         max_length=10,
         choices=(
             ("PENDING", "PENDING"),
+            ("SHIPPED", "SHIPPED"),
+            ("PROCESSING", "PROCESSING"),
             ("DELIVERED", "DELIVERED"),
             ("CANCELLED", "CANCELLED"),
+            ("COMPLETED", "COMPLETED"),
         ),
     )
+    coupon = models.ForeignKey(
+        "Coupon",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="orders",
+    )
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_applied = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    final_price = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_id = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     delivery_address = models.ForeignKey(
@@ -24,9 +38,23 @@ class Order(models.Model):
     class Meta:
         verbose_name = "Order"
         verbose_name_plural = "Orders"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.product.name + " - " + str(self.quantity)
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey("products.Product", on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name} (Order ID: {self.order.id})"
 
 
 class Coupon(models.Model):
@@ -94,7 +122,7 @@ class Cart(models.Model):
         verbose_name_plural = "Carts"
 
     def __str__(self):
-        return f"Cart for {self.user.username} with {self.items.count()} items"
+        return f"Cart for {self.user} with {self.items.count()} items"
 
 
 class CartItem(models.Model):

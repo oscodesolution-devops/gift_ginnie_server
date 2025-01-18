@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('products', '0016_remove_carouselitem_imagelink_carouselitem_image'),
+        ("products", "0016_remove_carouselitem_imagelink_carouselitem_image"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='stock',
+            model_name="product",
+            name="stock",
             field=models.PositiveBigIntegerField(default=0),
         ),
     ]
