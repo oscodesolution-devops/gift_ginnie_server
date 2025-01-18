@@ -4,9 +4,6 @@ from django.utils.timezone import now
 
 class Order(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
-    product = models.ForeignKey("products.Product", on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=10,
         choices=(
@@ -18,14 +15,7 @@ class Order(models.Model):
             ("COMPLETED", "COMPLETED"),
         ),
     )
-    coupon = models.ForeignKey(
-        "Coupon",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="orders",
-    )
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount_applied = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     final_price = models.DecimalField(max_digits=10, decimal_places=2)
     payment_id = models.CharField(max_length=100, null=True, blank=True)
@@ -41,7 +31,7 @@ class Order(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.product.name + " - " + str(self.quantity)
+        return self.user.email + " - " + str(self.total_price)
 
 
 class OrderItem(models.Model):

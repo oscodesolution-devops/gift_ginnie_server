@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ApplyCouponView, CartItemView, CartView
+from .views import ApplyCouponView, CartItemView, CartView, CheckoutView
 
 urlpatterns = [
     path("cart/", CartView.as_view(), name="cart"),
@@ -11,4 +11,5 @@ urlpatterns = [
         name="cart-item-update-delete",
     ),
     path("cart/applyCoupon/", ApplyCouponView.as_view(), name="apply-remove-coupon"),
+    path("orders/checkout/", CheckoutView.as_view(), name="checkout"),
 ]

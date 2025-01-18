@@ -176,11 +176,11 @@ class PopularProductsView(APIView):
                 Product.objects.prefetch_related("images")
                 .all()
                 .annotate(
-                    average_rating=Avg("productrating__rating"),
-                    total_reviews=Count("productrating__id"),
+                    average_rating=Avg("ratings__rating"),
+                    total_reviews=Count("ratings"),
                 )
                 .select_related("category")
-                .filter(productrating__rating__isnull=False)
+                .filter(ratings__rating__isnull=False)
                 .order_by("-average_rating")[:10]
             )
             serializer = PopularProductSerializer(popular_products, many=True)
@@ -464,7 +464,10 @@ class CategoryView(APIView):
             products = Product.objects.filter(category__id=id)
             category_exists = ProductCategory.objects.filter(id=id).exists()
             if not category_exists:
-                return Response({"message":f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"message": f"The category_id {id} not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
             serializer = ProductSerializer(products, many=True)
             return Response(
                 {
@@ -486,9 +489,14 @@ class CategoryView(APIView):
             try:
                 category = ProductCategory.objects.get(id=id)
                 if not category:
-                    return Response({"message":f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
+                    return Response(
+                        {"message": f"The category_id {id} not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
                 if category.image and category.image.public_id:
-                    res = cloudinary.uploader.destroy(category.image.public_id, invalidate=True) 
+                    res = cloudinary.uploader.destroy(
+                        category.image.public_id, invalidate=True
+                    )
                     print("category image removed", res)
                 category.delete()
                 return Response(
@@ -515,7 +523,10 @@ class CategoryView(APIView):
             try:
                 category = ProductCategory.objects.get(id=id)
                 if not category:
-                    return Response({"message":f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
+                    return Response(
+                        {"message": f"The category_id {id} not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
                 serializer = CategorySerializer(
                     category, data=request.data, partial=True
                 )

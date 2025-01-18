@@ -37,7 +37,9 @@ class ProductCategory(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
-    category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name="products")
+    category = models.ForeignKey(
+        ProductCategory, on_delete=models.CASCADE, related_name="products"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     brand = models.CharField(max_length=100, blank=True, null=True)
     product_type = models.CharField(max_length=100, blank=True, null=True)

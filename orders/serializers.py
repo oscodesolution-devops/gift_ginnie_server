@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
-from orders.models import Cart, CartItem, Coupon
+from orders.models import Cart, CartItem, Coupon, Order, OrderItem
 from products.models import Product
 from django.db import models
 from products.serializers import ProductSerializer
+from users.serializers import CustomerAddressSerializer
 
 
 class CouponSerializer(serializers.ModelSerializer):
@@ -84,3 +85,41 @@ class CartSerializer(serializers.ModelSerializer):
             return 0
         percentage = (difference / obj.calculate_original_price()) * 100
         return percentage
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ["id", "product", "quantity", "price"]
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+    delivery_address = CustomerAddressSerializer(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            "id",
+            "status",
+            "total_price",
+            "discount_applied",
+            "final_price",
+            "created_at",
+            "updated_at",
+            "delivery_address",
+            "items",
+        ]
+        read_only_fields = [
+            "id",
+            "status",
+            "total_price",
+            "discount_applied",
+            "final_price",
+            "created_at",
+            "updated_at",
+            "delivery_address",
+            "items",
+        ]

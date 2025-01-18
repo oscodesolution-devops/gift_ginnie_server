@@ -3,13 +3,15 @@ from datetime import timezone
 from django.shortcuts import get_object_or_404, render
 from rest_framework.response import Response
 from django.db.models import F
+from django.db import transaction
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
-from orders.serializers import CartItemSerializer, CartSerializer
+from orders.serializers import CartItemSerializer, CartSerializer, OrderSerializer
 from products.models import Product
-from .models import CouponUsage, Order, Cart, CartItem, Coupon
+from users.models import CustomerAddress
+from .models import CouponUsage, Order, Cart, CartItem, Coupon, OrderItem
 
 
 class CartView(APIView):
@@ -229,3 +231,100 @@ class CartItemView(APIView):
             {"message": "Item removed from cart successfully."},
             status=status.HTTP_200_OK,
         )
+
+
+class CheckoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            orders = Order.objects.filter(user=request.user)
+            serializer = OrderSerializer(orders, many=True)
+            return Response(
+                {"message": "Orders fetched successfully.", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {"message": f"Error occurred while fetching orders {e}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def post(self, request):
+        address_id = request.data.get("address_id")
+        if not address_id:
+            return Response(
+                {
+                    "message": "Address ID not provided.",
+                    "data": ["address_id is required"],
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            address = CustomerAddress.objects.get(id=address_id)
+        except CustomerAddress.DoesNotExist:
+            return Response(
+                {"message": "Address not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        user_cart, created = Cart.objects.get_or_create(user=request.user)
+        if user_cart.items.count() == 0:
+            return Response(
+                {"message": "Cart is empty, add items before checkout."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        total_price = user_cart.calculate_original_price()
+        final_price = user_cart.calculate_discounted_price()
+        discount_applied = total_price - final_price
+
+        try:
+            with transaction.atomic():
+                order = Order.objects.create(
+                    user=request.user,
+                    total_price=total_price,
+                    status="PENDING",
+                    delivery_address=address,
+                    final_price=final_price,
+                    discount_applied=discount_applied,
+                )
+                for item in user_cart.items.all():
+                    if not item.product.in_stock():
+                        raise ValueError(
+                            "Some products are out of stock, please update your cart."
+                        )
+                    order_item = OrderItem.objects.create(
+                        order=order,
+                        product=item.product,
+                        quantity=item.quantity,
+                        price=item.price,
+                    )
+                    order_item.save()
+                    item.product.stock -= item.quantity
+                    item.product.save()
+
+                order.save()
+
+            return Response(
+                {
+                    "message": "Order created successfully.",
+                    "data": order.id,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        except CustomerAddress.DoesNotExist:
+            return Response(
+                {"message": "Address not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except ValueError as e:
+            return Response(
+                {"message": "Some products are out of stock, please update your cart."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            return Response(
+                {"message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
