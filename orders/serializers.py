@@ -123,3 +123,18 @@ class OrderSerializer(serializers.ModelSerializer):
             "delivery_address",
             "items",
         ]
+
+
+class VerifyPaymentSerializer(serializers.Serializer):
+    razorpay_payment_id = serializers.CharField(max_length=100)
+    razorpay_order_id = serializers.CharField(max_length=100)
+    razorpay_signature = serializers.CharField(max_length=100)
+
+    def validate_razorpay_order_id(self, value):
+        try:
+            order = Order.objects.get(razorpay_order_id=value, user=self.context["request"].user)
+            if order.status== "COMPLETED":
+                raise serializers.ValidationError("Payment Order already completed")
+        except Order.DoesNotExist:
+            raise serializers.ValidationError("Payment Order does not exist")
+        return value

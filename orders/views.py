@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.utils.timezone import now
-from datetime import timezone
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
+import razorpay
 from rest_framework.response import Response
 from django.db.models import F
 from django.db import transaction
@@ -8,7 +9,12 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
-from orders.serializers import CartItemSerializer, CartSerializer, OrderSerializer
+from orders.serializers import (
+    CartItemSerializer,
+    CartSerializer,
+    OrderSerializer,
+    VerifyPaymentSerializer,
+)
 from products.models import Product
 from users.models import CustomerAddress
 from .models import CouponUsage, Order, Cart, CartItem, Coupon, OrderItem
@@ -278,8 +284,14 @@ class CheckoutView(APIView):
         final_price = user_cart.calculate_discounted_price()
         discount_applied = total_price - final_price
 
+        # Razorpay client initialization
+        client = razorpay.Client(
+            auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET)
+        )
+
         try:
             with transaction.atomic():
+                # Create a local order
                 order = Order.objects.create(
                     user=request.user,
                     total_price=total_price,
@@ -288,6 +300,8 @@ class CheckoutView(APIView):
                     final_price=final_price,
                     discount_applied=discount_applied,
                 )
+
+                # Add items to the order
                 for item in user_cart.items.all():
                     if not item.product.in_stock():
                         raise ValueError(
@@ -305,19 +319,32 @@ class CheckoutView(APIView):
 
                 order.save()
 
+                # Create a Razorpay Order
+                razorpay_order = client.order.create(
+                    {
+                        "amount": int(final_price * 100),  # Amount in paise
+                        "currency": "INR",
+                        "receipt": f"order_rcptid_{order.id}",
+                        "payment_capture": "1",
+                    }
+                )
+
+                # Attach Razorpay Order ID to the local order
+                order.razorpay_order_id = razorpay_order["id"]
+                order.save()
+                user_cart.delete()
+
             return Response(
                 {
                     "message": "Order created successfully.",
-                    "data": order.id,
+                    "order_id": order.id,
+                    "razorpay_order_id": razorpay_order["id"],
+                    "amount": final_price,
+                    "currency": "INR",
                 },
                 status=status.HTTP_201_CREATED,
             )
 
-        except CustomerAddress.DoesNotExist:
-            return Response(
-                {"message": "Address not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
         except ValueError as e:
             return Response(
                 {"message": "Some products are out of stock, please update your cart."},
@@ -326,5 +353,56 @@ class CheckoutView(APIView):
         except Exception as e:
             return Response(
                 {"message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class VerifyPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            serializer = VerifyPaymentSerializer(data=request.data, context={'request':request})
+            if serializer.is_valid():
+                data = serializer.data
+                razorpay_order_id = data["razorpay_order_id"]
+                razorpay_payment_id = data["razorpay_payment_id"]
+                razorpay_signature = data["razorpay_signature"]
+                client = razorpay.Client(
+                    auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET)
+                )
+                client.utility.verify_payment_signature(
+                    {
+                        "razorpay_order_id": razorpay_order_id,
+                        "razorpay_payment_id": razorpay_payment_id,
+                        "razorpay_signature": razorpay_signature,
+                    }
+                )
+
+                # If verification is successful, update order status
+                order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+                order.status = "COMPLETED"
+                order.razorpay_payment_id = razorpay_payment_id
+                order.save()
+            else:
+                return Response({"success": False, "message": serializer.errors})
+
+            return Response(
+                {"success": True, "message": "Payment verified successfully."},
+                status=status.HTTP_200_OK,
+            )
+        except razorpay.errors.SignatureVerificationError:
+            return Response(
+                {"success": False, "message": "Invalid payment signature."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Order.DoesNotExist:
+            return Response(
+                {"success": False, "message": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"success": False, "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )

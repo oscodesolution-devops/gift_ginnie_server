@@ -32,7 +32,7 @@ from .serializers import (
 
 
 class CarouselView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         carousel_items = CarouselItem.objects.filter(is_active=True)

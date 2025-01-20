@@ -139,6 +139,9 @@ cloudinary.config(
     secure=True,
 )
 
+RAZORPAY_API_KEY = env("RAZORPAY_API_KEY")
+RAZORPAY_API_SECRET = env("RAZORPAY_API_SECRET")
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 

@@ -17,4 +17,6 @@ dependencies = [
     "pillow>=11.1.0",
     "drf-yasg>=1.21.8",
     "drf-spectacular>=0.28.0",
+    "razorpay>=1.4.2",
+    "setuptools>=75.8.0",
 ]
