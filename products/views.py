@@ -183,7 +183,7 @@ class PopularProductsView(APIView):
                 .filter(ratings__rating__isnull=False)
                 .order_by("-average_rating")[:10]
             )
-            serializer = PopularProductSerializer(popular_products, many=True)
+            serializer = PopularProductSerializer(popular_products, many=True, context={"request": request})
             return Response(
                 {
                     "message": "Popular products fetched successfully.",
@@ -386,7 +386,7 @@ class AllProductsView(APIView):
     def get(self, request):
         try:
             products = Product.objects.all()
-            serializer = ProductSerializer(products, many=True)
+            serializer = ProductSerializer(products, many=True, context = {"request": request})
             return Response(
                 {
                     "message": "All products fetched successfully.",

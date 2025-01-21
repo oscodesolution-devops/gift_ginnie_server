@@ -107,10 +107,13 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class PopularProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
-
+    is_liked = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ["id", "name", "description", "category", "images"]
+        fields = ["id", "name", "description", "category", "images", "is_liked"]
+
+    def get_is_liked(self,obj):
+        return FavouriteProduct.objects.filter(user=self.context['request'].user, product=obj).exists()
 
 
 class AddProductSerializer(serializers.ModelSerializer):
@@ -265,6 +268,7 @@ class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
     in_stock = serializers.SerializerMethodField(read_only=True)
     rating = serializers.SerializerMethodField(read_only=True)
+    is_liked = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Product
@@ -281,8 +285,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "selling_price",
             "brand",
             "product_type",
+            "is_liked"
         ]
-        read_only_fields = ["id", "category", "images"]
+        read_only_fields = ["id", "category", "images", "is_liked"]
         write_only_fields = ["category_id"]
 
     def get_in_stock(self, obj):
@@ -290,6 +295,9 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_rating(self, obj):
         return obj.average_rating()
+    
+    def get_is_liked(self,obj):
+        return FavouriteProduct.objects.filter(user=self.context['request'].user, product=obj).exists()
 
     def create(self, validated_data):
         validated_data["category"] = ProductCategory.objects.get(
