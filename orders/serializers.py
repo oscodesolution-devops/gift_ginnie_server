@@ -13,6 +13,8 @@ class CouponSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "code",
+            "title",
+            "description",
             "discount_type",
             "discount_value",
             "max_usage",
@@ -43,7 +45,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         product = validated_data.get("product")
-        validated_data["price"] = product.price * validated_data["quantity"]
+        validated_data["price"] = product.selling_price * validated_data["quantity"]
         # Call the parent class's `create` method
         return super().create(validated_data)
 
@@ -132,8 +134,10 @@ class VerifyPaymentSerializer(serializers.Serializer):
 
     def validate_razorpay_order_id(self, value):
         try:
-            order = Order.objects.get(razorpay_order_id=value, user=self.context["request"].user)
-            if order.status== "COMPLETED":
+            order = Order.objects.get(
+                razorpay_order_id=value, user=self.context["request"].user
+            )
+            if order.status == "COMPLETED":
                 raise serializers.ValidationError("Payment Order already completed")
         except Order.DoesNotExist:
             raise serializers.ValidationError("Payment Order does not exist")

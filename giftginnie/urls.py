@@ -42,15 +42,10 @@ urlpatterns = [
         "api/v1/",
         include("orders.urls"),
     ),
-    # path(
-    #     "api/v1/",
-    #     include("payments.urls"),
-    # ),
-    # path(
-    #     "api/v1/",
-    #     include("ratings.urls"),
-    # ),
-    # path("api/v1/", include("core.urls")),
+    path(
+        "api/v1/",
+        include("ratings.urls"),
+    ),
 ]
 
 admin.site.site_header = "GiftGinnie Admin"

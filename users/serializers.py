@@ -41,6 +41,7 @@ class CustomerAddressSerializer(serializers.ModelSerializer):
             "state",
             "country",
             "pincode",
+            "address_type",
         ]
         read_only_fields = ["id"]
 

@@ -50,6 +50,8 @@ class OrderItem(models.Model):
 
 class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
+    title = models.CharField(max_length=100, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     discount_type = models.CharField(
         max_length=10, choices=(("PERCENT", "PERCENT"), ("FLAT", "FLAT"))
     )  # Percentage or flat discount
@@ -88,11 +90,11 @@ class Cart(models.Model):
     )
 
     def calculate_original_price(self):
-        return sum(item.quantity * item.price for item in self.items.all())
+        return sum(item.price for item in self.items.all())
 
     def calculate_discounted_price(self):
         # Total price without discount
-        total = sum(item.quantity * item.price for item in self.items.all())
+        total = sum(item.price for item in self.items.all())
         # Apply coupon discount if valid
         if (
             self.coupon

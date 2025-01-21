@@ -44,7 +44,8 @@ class Product(models.Model):
     brand = models.CharField(max_length=100, blank=True, null=True)
     product_type = models.CharField(max_length=100, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    original_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock = models.PositiveBigIntegerField(default=0)
 
     class Meta:

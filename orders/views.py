@@ -12,12 +12,34 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from orders.serializers import (
     CartItemSerializer,
     CartSerializer,
+    CouponSerializer,
     OrderSerializer,
     VerifyPaymentSerializer,
 )
 from products.models import Product
 from users.models import CustomerAddress
 from .models import CouponUsage, Order, Cart, CartItem, Coupon, OrderItem
+
+
+class CouponView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            coupon = Coupon.objects.filter(is_active=True)
+            if not coupon:
+                return Response(
+                    {"message": "Coupon not found."}, status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = CouponSerializer(coupon, many=True)
+            return Response(
+                {"message": "Coupons fetched successfully.", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {"message": f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class CartView(APIView):
@@ -98,6 +120,11 @@ class ApplyCouponView(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            if cart.items.count() == 0:
+                return Response(
+                    {"message": "Cart is empty, add items before applying coupon."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Apply coupon to the cart
             CouponUsage.objects.create(user=request.user, coupon=coupon)
@@ -161,7 +188,7 @@ class CartItemView(APIView):
             product = Product.objects.get(id=data.get("product_id"))
             if existing_item:
                 existing_item.quantity = F("quantity") + data.get("quantity")
-                existing_item.price = product.price * existing_item.quantity
+                existing_item.price = product.selling_price * existing_item.quantity
                 existing_item.save()
                 existing_item.refresh_from_db()
                 serializer = CartItemSerializer(existing_item)
@@ -362,7 +389,9 @@ class VerifyPaymentView(APIView):
 
     def post(self, request):
         try:
-            serializer = VerifyPaymentSerializer(data=request.data, context={'request':request})
+            serializer = VerifyPaymentSerializer(
+                data=request.data, context={"request": request}
+            )
             if serializer.is_valid():
                 data = serializer.data
                 razorpay_order_id = data["razorpay_order_id"]
