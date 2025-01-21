@@ -607,7 +607,7 @@ class FavouriteProductView(APIView):
         try:
             user = request.user
             favourite_products = FavouriteProduct.objects.filter(user=user)
-            serializer = FavouriteProductSerializer(favourite_products, many=True)
+            serializer = FavouriteProductSerializer(favourite_products, many=True,context={'request': request})
             return Response(
                 {
                     "message": "Favourite products retrieved successfully",
@@ -626,7 +626,7 @@ class FavouriteProductView(APIView):
     def post(self, request):
         try:
             product_id = request.data.get("id")
-            serializer = FavouriteProductSerializer(data=request.data)
+            serializer = FavouriteProductSerializer(data=request.data, context={'request': request})
 
             if serializer.is_valid():
                 product = Product.objects.get(id=product_id)
@@ -644,7 +644,7 @@ class FavouriteProductView(APIView):
                             status=status.HTTP_200_OK,
                         )
                     else:
-                        serializer = FavouriteProductSerializer(data=request.data)
+                        serializer = FavouriteProductSerializer(data=request.data, context={'request': request})
                         favourite_product = FavouriteProduct(user=user, product=product)
                         favourite_product.save()
                     return Response(

@@ -125,9 +125,14 @@ class ApplyCouponView(APIView):
                     {"message": "Cart is empty, add items before applying coupon."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-
-            # Apply coupon to the cart
-            CouponUsage.objects.create(user=request.user, coupon=coupon)
+            usage = CouponUsage.objects.filter(user=request.user, coupon=coupon).first()
+            if usage:
+                return Response(
+                    {
+                        "message": "You cannot apply the same coupon twice."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             cart.coupon = coupon
             cart.save()
 
@@ -358,6 +363,8 @@ class CheckoutView(APIView):
 
                 # Attach Razorpay Order ID to the local order
                 order.razorpay_order_id = razorpay_order["id"]
+                # Apply coupon to the purchase, so that coupon usage limit is not exceeded
+                CouponUsage.objects.create(user=request.user, coupon=user_cart.coupon)
                 order.save()
                 user_cart.delete()
 
