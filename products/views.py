@@ -1,3 +1,4 @@
+
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
@@ -409,7 +410,7 @@ class ProductView(APIView):
     def get(self, request, id):
         try:
             product = Product.objects.get(id=id)
-            serializer = ProductSerializer(product)
+            serializer = ProductSerializer(product, context={"request": request})
             return Response(
                 {
                     "message": "Product fetched successfully.",
@@ -468,7 +469,7 @@ class CategoryView(APIView):
                     {"message": f"The category_id {id} not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            serializer = ProductSerializer(products, many=True)
+            serializer = ProductSerializer(products, many=True, context={"request": request})
             return Response(
                 {
                     "message": "Category found",

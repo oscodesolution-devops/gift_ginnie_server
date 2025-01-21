@@ -31,7 +31,7 @@ class CouponView(APIView):
                 return Response(
                     {"message": "Coupon not found."}, status=status.HTTP_404_NOT_FOUND
                 )
-            serializer = CouponSerializer(coupon, many=True)
+            serializer = CouponSerializer(coupon, many=True, context={"request": request})
             return Response(
                 {"message": "Coupons fetched successfully.", "data": serializer.data},
                 status=status.HTTP_200_OK,
@@ -53,7 +53,7 @@ class CartView(APIView):
                     {"message": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
                 )
 
-            serializer = CartSerializer(cart)
+            serializer = CartSerializer(cart, context={"request": request})
             return Response(
                 {"message": "Cart fetched successfully.", "data": serializer.data},
                 status=status.HTTP_200_OK,
@@ -191,12 +191,12 @@ class CartItemView(APIView):
                 existing_item.price = product.selling_price * existing_item.quantity
                 existing_item.save()
                 existing_item.refresh_from_db()
-                serializer = CartItemSerializer(existing_item)
+                serializer = CartItemSerializer(existing_item, context={"request": request})
                 return Response(
                     {"message": "Item Updated successfully", "data": serializer.data},
                     status=status.HTTP_200_OK,
                 )
-            serializer = CartItemSerializer(data=data)
+            serializer = CartItemSerializer(data=data, context={"request": request})
             if serializer.is_valid():
                 serializer.save()
                 return Response(
@@ -228,7 +228,7 @@ class CartItemView(APIView):
                 CartItem, id=cart_item_id, cart__user=request.user
             )
 
-            serializer = CartItemSerializer(cart_item, data=request.data, partial=True)
+            serializer = CartItemSerializer(cart_item, data=request.data, partial=True, context={"request": request})
             if serializer.is_valid():
                 serializer.save()
                 return Response(
@@ -272,7 +272,7 @@ class CheckoutView(APIView):
     def get(self, request):
         try:
             orders = Order.objects.filter(user=request.user)
-            serializer = OrderSerializer(orders, many=True)
+            serializer = OrderSerializer(orders, many=True, context={"request": request})
             return Response(
                 {"message": "Orders fetched successfully.", "data": serializer.data},
                 status=status.HTTP_200_OK,

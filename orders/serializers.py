@@ -42,7 +42,11 @@ class CartItemSerializer(serializers.ModelSerializer):
             "price",
         ]
         read_only_fields = ["id", "price"]
-
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        product_serializer = ProductSerializer(instance.product, context=self.context)
+        representation["product"] = product_serializer.data
+        return representation
     def create(self, validated_data):
         product = validated_data.get("product")
         validated_data["price"] = product.selling_price * validated_data["quantity"]
