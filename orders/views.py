@@ -1,3 +1,4 @@
+import json
 from django.conf import settings
 from django.utils.timezone import now
 from django.shortcuts import get_object_or_404
@@ -7,7 +8,9 @@ from django.db.models import F
 from django.db import transaction
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 from orders.serializers import (
     CartItemSerializer,
@@ -259,16 +262,34 @@ class CartItemView(APIView):
             )
 
     def delete(self, request, cart_item_id):
-        """Delete an item from the cart."""
-        # Retrieve and delete the cart item
-        cart_item = get_object_or_404(
-            CartItem, id=cart_item_id, cart__user=request.user
-        )
-        cart_item.delete()
-        return Response(
-            {"message": "Item removed from cart successfully."},
-            status=status.HTTP_200_OK,
-        )
+        try:
+            """Delete an item from the cart."""
+            # Retrieve and delete the cart item
+            cart_item = get_object_or_404(
+                CartItem, id=cart_item_id, cart__user=request.user
+            )
+            if cart_item:
+                cart_item.delete()
+                return Response(
+                    {"message": "Item removed from cart successfully."},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"message": "Cart item doeys not exist."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        except CartItem.DoesNotExist:
+            return Response(
+                {"message": "Cart item does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"message": "Failed to update cart item.", "errors": e.args},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+            
 
 
 class CheckoutView(APIView):
@@ -363,10 +384,7 @@ class CheckoutView(APIView):
 
                 # Attach Razorpay Order ID to the local order
                 order.razorpay_order_id = razorpay_order["id"]
-                # Apply coupon to the purchase, so that coupon usage limit is not exceeded
-                CouponUsage.objects.create(user=request.user, coupon=user_cart.coupon)
                 order.save()
-                user_cart.delete()
 
             return Response(
                 {
@@ -401,6 +419,7 @@ class VerifyPaymentView(APIView):
             )
             if serializer.is_valid():
                 data = serializer.data
+                print(data, "data from verify payment")
                 razorpay_order_id = data["razorpay_order_id"]
                 razorpay_payment_id = data["razorpay_payment_id"]
                 razorpay_signature = data["razorpay_signature"]
@@ -416,15 +435,13 @@ class VerifyPaymentView(APIView):
                 )
 
                 # If verification is successful, update order status
-                order = Order.objects.get(razorpay_order_id=razorpay_order_id)
-                order.status = "COMPLETED"
-                order.razorpay_payment_id = razorpay_payment_id
-                order.save()
+                order = Order.objects.filter(razorpay_order_id=razorpay_order_id, razorpay_payment_id=razorpay_payment_id).first()
+                serializer = OrderSerializer(order, context={"request": request})
             else:
                 return Response({"success": False, "message": serializer.errors})
 
             return Response(
-                {"success": True, "message": "Payment verified successfully."},
+                {"success": True, "message": "Payment verified successfully.","data": serializer.data},
                 status=status.HTTP_200_OK,
             )
         except razorpay.errors.SignatureVerificationError:
@@ -442,3 +459,49 @@ class VerifyPaymentView(APIView):
                 {"success": False, "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+@csrf_exempt
+def razorpay_webhook( request):
+    if request.method == "POST":
+        try:
+            received_signature = request.headers.get("X-Razorpay-Signature")
+            payload = request.body.decode("utf-8")
+            print(payload, "payload")
+            client = razorpay.Client(
+                auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET)
+            )
+            client.utility.verify_webhook_signature(
+                payload, received_signature, "hello@123"
+            )
+
+            data = json.loads(payload)
+            if data.get('event') ==  'payment.captured':
+                payment_id = data["payload"]["payment"]["entity"]["id"]
+                razorpay_order_id = data["payload"]["payment"]["entity"]["order_id"]
+                order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+                order.razorpay_payment_id = payment_id
+                user = order.user
+                order.save()
+                user_cart, created = Cart.objects.get_or_create(user=user)
+                if user_cart.coupon:
+                    CouponUsage.objects.create(user=request.user, coupon=user_cart.coupon)
+                user_cart.delete()
+            elif data.get('event') == 'payment.failed':
+                payment_id = data["payload"]["payment"]["entity"]["id"]
+                razorpay_order_id = data["payload"]["payment"]["entity"]["order_id"]
+                order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+                order.razorpay_payment_id = payment_id
+                order.status = "FAILED"
+                order.save()
+                user_cart, created = Cart.objects.get_or_create(user=request.user)
+                # restock the stock if payment failed
+                for item in user_cart.items.all():
+                    item.product.stock += item.quantity
+                    item.product.save()
+                user_cart.delete()
+            return JsonResponse({"message": "Webhook received successfully."}, status=200)
+    
+        except Exception as e:
+            print(str(e), "error")
+            return JsonResponse({"message": str(e)}, status=200)

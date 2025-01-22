@@ -76,11 +76,10 @@ class CouponUsage(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
     used_at = models.DateTimeField(auto_now_add=True)
-
     class Meta:
         verbose_name = "Coupon Usage"
         verbose_name_plural = "Coupon Usages"
-        unique_together = ("user", "coupon")
+        # unique_together = ("user", "coupon")
 
 
 class Cart(models.Model):

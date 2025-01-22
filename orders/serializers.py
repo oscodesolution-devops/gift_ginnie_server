@@ -52,6 +52,9 @@ class CartItemSerializer(serializers.ModelSerializer):
         validated_data["price"] = product.selling_price * validated_data["quantity"]
         # Call the parent class's `create` method
         return super().create(validated_data)
+    def update(self, instance, validated_data):
+        instance.price = instance.product.selling_price * validated_data["quantity"]
+        return super().update(instance, validated_data)
 
 
 class CartSerializer(serializers.ModelSerializer):

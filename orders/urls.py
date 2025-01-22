@@ -6,6 +6,7 @@ from .views import (
     CheckoutView,
     CouponView,
     VerifyPaymentView,
+    razorpay_webhook,
 )
 
 urlpatterns = [
@@ -20,4 +21,5 @@ urlpatterns = [
     path("cart/applyCoupon/", ApplyCouponView.as_view(), name="apply-remove-coupon"),
     path("orders/checkout/", CheckoutView.as_view(), name="checkout"),
     path("orders/verifyPayment/", VerifyPaymentView.as_view(), name="verify-payment"),
+    path("razorpay/webhook/", razorpay_webhook, name="razorpay-webhook"),
 ]
