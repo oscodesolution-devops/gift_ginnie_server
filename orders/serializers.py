@@ -4,6 +4,7 @@ from orders.models import Cart, CartItem, Coupon, Order, OrderItem
 from products.models import Product
 from django.db import models
 from products.serializers import ProductSerializer
+from ratings.models import ProductRating
 from users.serializers import CustomerAddressSerializer
 
 
@@ -101,16 +102,21 @@ class CartSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
-
+    my_rating = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = OrderItem
-        fields = ["id", "product", "quantity", "price"]
+        fields = ["id", "product", "quantity", "price", "my_rating"]
+        read_only_fields = ["my_rating"]
 
-
+    def get_my_rating(self, obj):
+        rating = ProductRating.objects.filter(user=self.context["request"].user,product=obj.product).first()
+        if rating:
+            return rating.rating
+        return None
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     delivery_address = CustomerAddressSerializer(read_only=True)
-
+    
     class Meta:
         model = Order
         fields = [
@@ -135,7 +141,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "delivery_address",
             "items",
         ]
-
+    
 
 class VerifyPaymentSerializer(serializers.Serializer):
     razorpay_payment_id = serializers.CharField(max_length=100)
