@@ -69,7 +69,7 @@ class RatingView(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            serializer = ProductRatingSerializer(data=request.data)
+            serializer = ProductRatingSerializer(data=request.data, context={"request": request, "product_id": product_id})
             if serializer.is_valid():
                 serializer.save()
                 return Response(
@@ -84,7 +84,7 @@ class RatingView(APIView):
 
         except Exception as e:
             return Response(
-                {"message": "Something went wrong"},
+                {"message": "Something went wrong", "error":str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -128,6 +128,6 @@ class RatingView(APIView):
 
         except Exception as e:
             return Response(
-                {"message": "Something went wrong"},
+                {"message": "Something went wrong", "error":str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )

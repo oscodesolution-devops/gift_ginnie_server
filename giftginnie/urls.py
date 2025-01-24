@@ -46,6 +46,7 @@ urlpatterns = [
         "api/v1/",
         include("ratings.urls"),
     ),
+    path("api/v1/", include("blog.urls")),
 ]
 
 admin.site.site_header = "GiftGinnie Admin"

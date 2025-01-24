@@ -1,4 +1,3 @@
-
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
@@ -184,7 +183,9 @@ class PopularProductsView(APIView):
                 .filter(ratings__rating__isnull=False)
                 .order_by("-average_rating")[:10]
             )
-            serializer = PopularProductSerializer(popular_products, many=True, context={"request": request})
+            serializer = PopularProductSerializer(
+                popular_products, many=True, context={"request": request}
+            )
             return Response(
                 {
                     "message": "Popular products fetched successfully.",
@@ -387,7 +388,9 @@ class AllProductsView(APIView):
     def get(self, request):
         try:
             products = Product.objects.all()
-            serializer = ProductSerializer(products, many=True, context = {"request": request})
+            serializer = ProductSerializer(
+                products, many=True, context={"request": request}
+            )
             return Response(
                 {
                     "message": "All products fetched successfully.",
@@ -469,7 +472,9 @@ class CategoryView(APIView):
                     {"message": f"The category_id {id} not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            serializer = ProductSerializer(products, many=True, context={"request": request})
+            serializer = ProductSerializer(
+                products, many=True, context={"request": request}
+            )
             return Response(
                 {
                     "message": "Category found",
@@ -607,7 +612,9 @@ class FavouriteProductView(APIView):
         try:
             user = request.user
             favourite_products = FavouriteProduct.objects.filter(user=user)
-            serializer = FavouriteProductSerializer(favourite_products, many=True,context={'request': request})
+            serializer = FavouriteProductSerializer(
+                favourite_products, many=True, context={"request": request}
+            )
             return Response(
                 {
                     "message": "Favourite products retrieved successfully",
@@ -626,7 +633,9 @@ class FavouriteProductView(APIView):
     def post(self, request):
         try:
             product_id = request.data.get("id")
-            serializer = FavouriteProductSerializer(data=request.data, context={'request': request})
+            serializer = FavouriteProductSerializer(
+                data=request.data, context={"request": request}
+            )
 
             if serializer.is_valid():
                 product = Product.objects.get(id=product_id)
@@ -644,7 +653,9 @@ class FavouriteProductView(APIView):
                             status=status.HTTP_200_OK,
                         )
                     else:
-                        serializer = FavouriteProductSerializer(data=request.data, context={'request': request})
+                        serializer = FavouriteProductSerializer(
+                            data=request.data, context={"request": request}
+                        )
                         favourite_product = FavouriteProduct(user=user, product=product)
                         favourite_product.save()
                     return Response(

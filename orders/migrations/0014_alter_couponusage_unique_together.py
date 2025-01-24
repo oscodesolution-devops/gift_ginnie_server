@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('orders', '0013_remove_couponusage_title_coupon_description_and_more'),
+        ("orders", "0013_remove_couponusage_title_coupon_description_and_more"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='couponusage',
+            name="couponusage",
             unique_together=set(),
         ),
     ]

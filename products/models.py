@@ -54,7 +54,6 @@ class Product(models.Model):
 
     def in_stock(self):
         return self.stock > 0
-    
 
     def average_rating(self):
         ratings = self.ratings.all()

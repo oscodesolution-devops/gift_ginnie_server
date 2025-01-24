@@ -5,7 +5,7 @@ from django.utils.timezone import now
 class Order(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     status = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=(
             ("PENDING", "PENDING"),
             ("SHIPPED", "SHIPPED"),
@@ -13,6 +13,7 @@ class Order(models.Model):
             ("DELIVERED", "DELIVERED"),
             ("CANCELLED", "CANCELLED"),
             ("COMPLETED", "COMPLETED"),
+            ("PAYMENT_FAILED", "PAYMENT_FAILED"),
         ),
     )
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -76,6 +77,7 @@ class CouponUsage(models.Model):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
     used_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         verbose_name = "Coupon Usage"
         verbose_name_plural = "Coupon Usages"

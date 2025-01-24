@@ -34,7 +34,9 @@ class CouponView(APIView):
                 return Response(
                     {"message": "Coupon not found."}, status=status.HTTP_404_NOT_FOUND
                 )
-            serializer = CouponSerializer(coupon, many=True, context={"request": request})
+            serializer = CouponSerializer(
+                coupon, many=True, context={"request": request}
+            )
             return Response(
                 {"message": "Coupons fetched successfully.", "data": serializer.data},
                 status=status.HTTP_200_OK,
@@ -131,9 +133,7 @@ class ApplyCouponView(APIView):
             usage = CouponUsage.objects.filter(user=request.user, coupon=coupon).first()
             if usage:
                 return Response(
-                    {
-                        "message": "You cannot apply the same coupon twice."
-                    },
+                    {"message": "You cannot apply the same coupon twice."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             cart.coupon = coupon
@@ -199,7 +199,9 @@ class CartItemView(APIView):
                 existing_item.price = product.selling_price * existing_item.quantity
                 existing_item.save()
                 existing_item.refresh_from_db()
-                serializer = CartItemSerializer(existing_item, context={"request": request})
+                serializer = CartItemSerializer(
+                    existing_item, context={"request": request}
+                )
                 return Response(
                     {"message": "Item Updated successfully", "data": serializer.data},
                     status=status.HTTP_200_OK,
@@ -236,7 +238,9 @@ class CartItemView(APIView):
                 CartItem, id=cart_item_id, cart__user=request.user
             )
 
-            serializer = CartItemSerializer(cart_item, data=request.data, partial=True, context={"request": request})
+            serializer = CartItemSerializer(
+                cart_item, data=request.data, partial=True, context={"request": request}
+            )
             if serializer.is_valid():
                 serializer.save()
                 return Response(
@@ -289,7 +293,6 @@ class CartItemView(APIView):
                 {"message": "Failed to update cart item.", "errors": e.args},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-            
 
 
 class CheckoutView(APIView):
@@ -298,7 +301,9 @@ class CheckoutView(APIView):
     def get(self, request):
         try:
             orders = Order.objects.filter(user=request.user)
-            serializer = OrderSerializer(orders, many=True, context={"request": request})
+            serializer = OrderSerializer(
+                orders, many=True, context={"request": request}
+            )
             return Response(
                 {"message": "Orders fetched successfully.", "data": serializer.data},
                 status=status.HTTP_200_OK,
@@ -367,7 +372,6 @@ class CheckoutView(APIView):
                         price=item.price,
                     )
                     order_item.save()
-                    item.product.stock -= item.quantity
                     item.product.save()
 
                 order.save()
@@ -435,13 +439,20 @@ class VerifyPaymentView(APIView):
                 )
 
                 # If verification is successful, update order status
-                order = Order.objects.filter(razorpay_order_id=razorpay_order_id, razorpay_payment_id=razorpay_payment_id).first()
+                order = Order.objects.filter(
+                    razorpay_order_id=razorpay_order_id,
+                    razorpay_payment_id=razorpay_payment_id,
+                ).first()
                 serializer = OrderSerializer(order, context={"request": request})
             else:
                 return Response({"success": False, "message": serializer.errors})
 
             return Response(
-                {"success": True, "message": "Payment verified successfully.","data": serializer.data},
+                {
+                    "success": True,
+                    "message": "Payment verified successfully.",
+                    "data": serializer.data,
+                },
                 status=status.HTTP_200_OK,
             )
         except razorpay.errors.SignatureVerificationError:
@@ -462,7 +473,7 @@ class VerifyPaymentView(APIView):
 
 
 @csrf_exempt
-def razorpay_webhook( request):
+def razorpay_webhook(request):
     if request.method == "POST":
         try:
             received_signature = request.headers.get("X-Razorpay-Signature")
@@ -476,32 +487,36 @@ def razorpay_webhook( request):
             )
 
             data = json.loads(payload)
-            if data.get('event') ==  'payment.captured':
+            if data.get("event") == "payment.captured":
                 payment_id = data["payload"]["payment"]["entity"]["id"]
                 razorpay_order_id = data["payload"]["payment"]["entity"]["order_id"]
                 order = Order.objects.get(razorpay_order_id=razorpay_order_id)
                 order.razorpay_payment_id = payment_id
+                order.status = "COMPLETED"
                 user = order.user
                 order.save()
                 user_cart, created = Cart.objects.get_or_create(user=user)
                 if user_cart.coupon:
-                    CouponUsage.objects.create(user=request.user, coupon=user_cart.coupon)
+                    CouponUsage.objects.create(
+                        user=request.user, coupon=user_cart.coupon
+                    )
+                for item in user_cart.items.all():
+                    item.product.stock -= item.quantity
+                    item.product.save()
                 user_cart.delete()
-            elif data.get('event') == 'payment.failed':
+            elif data.get("event") == "payment.failed":
                 payment_id = data["payload"]["payment"]["entity"]["id"]
                 razorpay_order_id = data["payload"]["payment"]["entity"]["order_id"]
                 order = Order.objects.get(razorpay_order_id=razorpay_order_id)
                 order.razorpay_payment_id = payment_id
-                order.status = "FAILED"
+                order.status = "PAYMENT_FAILED"
                 order.save()
                 user_cart, created = Cart.objects.get_or_create(user=request.user)
-                # restock the stock if payment failed
-                for item in user_cart.items.all():
-                    item.product.stock += item.quantity
-                    item.product.save()
                 user_cart.delete()
-            return JsonResponse({"message": "Webhook received successfully."}, status=200)
-    
+            return JsonResponse(
+                {"message": "Webhook received successfully."}, status=200
+            )
+
         except Exception as e:
             print(str(e), "error")
             return JsonResponse({"message": str(e)}, status=200)
