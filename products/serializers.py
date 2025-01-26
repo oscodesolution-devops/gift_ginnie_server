@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.db.models import Avg, Count
 from giftginnie.global_serializers import CloudinaryImage
@@ -64,12 +65,8 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "image"]
 
     def create(self, validated_data):
-        product = ProductCategory.objects.get_or_404(id=validated_data.pop("id"))
-        if product.image:
-            res = cloudinary.uploader.destroy(product.image.public_id, invalidate=True)
-            print("category image removed", res)
         validated_data["image"] = validated_data.pop("category_image")
-        return ProductCategory.objects.create(**validated_data)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if "category_image" in validated_data:
