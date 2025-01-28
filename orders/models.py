@@ -33,7 +33,7 @@ class Order(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.user + " - " + str(self.total_price)
+        return str(self.user.id) + " - " + str(self.total_price)
 
 
 class OrderItem(models.Model):
