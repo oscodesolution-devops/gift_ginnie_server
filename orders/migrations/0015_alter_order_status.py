@@ -4,15 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('orders', '0014_alter_couponusage_unique_together'),
+        ("orders", "0014_alter_couponusage_unique_together"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='order',
-            name='status',
-            field=models.CharField(choices=[('PENDING', 'PENDING'), ('SHIPPED', 'SHIPPED'), ('PROCESSING', 'PROCESSING'), ('DELIVERED', 'DELIVERED'), ('CANCELLED', 'CANCELLED'), ('COMPLETED', 'COMPLETED'), ('PAYMENT_FAILED', 'PAYMENT_FAILED')], max_length=20),
+            model_name="order",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("PENDING", "PENDING"),
+                    ("SHIPPED", "SHIPPED"),
+                    ("PROCESSING", "PROCESSING"),
+                    ("DELIVERED", "DELIVERED"),
+                    ("CANCELLED", "CANCELLED"),
+                    ("COMPLETED", "COMPLETED"),
+                    ("PAYMENT_FAILED", "PAYMENT_FAILED"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

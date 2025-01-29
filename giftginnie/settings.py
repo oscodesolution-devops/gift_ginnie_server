@@ -4,6 +4,7 @@ import environ
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import os
 
 env = environ.Env()
 env.read_env()
@@ -25,12 +26,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 AUTH_USER_MODEL = "users.User"
 
 INSTALLED_APPS = [
+    'unfold',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "drf_yasg",
     "rest_framework",
     "rest_framework_simplejwt",
@@ -59,7 +62,9 @@ ROOT_URLCONF = "giftginnie.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            os.path.join(BASE_DIR, "templates"),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -166,3 +171,12 @@ MEDIA_URL = "/media/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+UNFOLD = {
+    "SITE_URL": "http://google.com",
+    "SIDEBAR": {"show_search": True, "show_all_applications": True, "navigation": []},
+    "DASHBOARD_CALLBACK": "giftginnie.admin_dashboard_views.dashboard_callback",
+}
+
+
+

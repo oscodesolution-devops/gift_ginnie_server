@@ -127,6 +127,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-unfold"
+version = "0.46.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9a/0a/82b13a865afa5ce54d096d3413605c18437ccf3b693c153b63ee0925482a/django_unfold-0.46.0.tar.gz", hash = "sha256:f949d80fa4315c058fb6e8d6602515ad46534fe19468f5718c34346816dfbfe3", size = 752234 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b9/0f/953410a5825fb813e1b64abb3f77a86075be1f478d2f0d924e62cf7dc0b4/django_unfold-0.46.0-py3-none-any.whl", hash = "sha256:cf1f51e2141dc570a2067808627e0b2db9de2518ee7406a7d907f449ed3a9e4c", size = 825070 },
+]
+
+[[package]]
 name = "djangorestframework"
 version = "3.15.2"
 source = { registry = "https://pypi.org/simple" }
@@ -196,6 +208,7 @@ dependencies = [
     { name = "django" },
     { name = "django-cors-headers" },
     { name = "django-environ" },
+    { name = "django-unfold" },
     { name = "djangorestframework" },
     { name = "djangorestframework-simplejwt" },
     { name = "drf-spectacular" },
@@ -214,6 +227,7 @@ requires-dist = [
     { name = "django", specifier = ">=5.1.4" },
     { name = "django-cors-headers", specifier = ">=4.6.0" },
     { name = "django-environ", specifier = ">=0.11.2" },
+    { name = "django-unfold", specifier = ">=0.46.0" },
     { name = "djangorestframework", specifier = ">=3.15.2" },
     { name = "djangorestframework-simplejwt", specifier = ">=5.3.1" },
     { name = "drf-spectacular", specifier = ">=0.28.0" },

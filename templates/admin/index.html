@@ -1,0 +1,30 @@
+{% extends 'unfold/layouts/base_simple.html' %}
+{% load cache humanize i18n %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block title %}
+    {% if subtitle %}
+        {{ subtitle }} |
+    {% endif %}
+    {{ title }} | {{ site_title|default:_('Django site admin') }}
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            {{ site_header|default:_('Django administration') }}
+        </a>
+    </h1>
+{% endblock %}
+
+{% block content %}
+    <!-- Your custom dashboard content will go here -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <h3 class="text-gray-500 text-sm uppercase font-bold">Total Users</h3>
+            <p class="text-2xl font-bold text-gray-900">{{ total_users }}</p>
+        </div>
+        <!-- Add more stat cards as needed -->
+    </div>
+{% endblock %}

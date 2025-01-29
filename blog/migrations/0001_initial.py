@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,39 +14,84 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='BlogPost',
+            name="BlogPost",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=100)),
-                ('body', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='date published')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='date updated')),
-                ('published', models.BooleanField(default=False)),
-                ('enable_comments', models.BooleanField(default=False)),
-                ('author', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=100)),
+                ("body", models.TextField()),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="date published"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="date updated"),
+                ),
+                ("published", models.BooleanField(default=False)),
+                ("enable_comments", models.BooleanField(default=False)),
+                (
+                    "author",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'blog post',
-                'verbose_name_plural': 'blog posts',
-                'ordering': ['-created_at'],
-                'get_latest_by': 'created_at',
+                "verbose_name": "blog post",
+                "verbose_name_plural": "blog posts",
+                "ordering": ["-created_at"],
+                "get_latest_by": "created_at",
             },
         ),
         migrations.CreateModel(
-            name='BlogComment',
+            name="BlogComment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('body', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('author', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('post', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='blog.blogpost')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("body", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "author",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "post",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comments",
+                        to="blog.blogpost",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Blog Comment',
-                'verbose_name_plural': 'blog comments',
-                'ordering': ['-created_at'],
-                'get_latest_by': 'created_at',
+                "verbose_name": "Blog Comment",
+                "verbose_name_plural": "blog comments",
+                "ordering": ["-created_at"],
+                "get_latest_by": "created_at",
             },
         ),
     ]
