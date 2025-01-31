@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from ratings.models import ProductRating
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django.db.models import Avg, Count, F, Q
@@ -32,7 +32,7 @@ from .serializers import (
 
 
 class CarouselView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         carousel_items = CarouselItem.objects.filter(is_active=True)
@@ -168,7 +168,7 @@ class DeleteProductImagesView(APIView):
 
 
 class PopularProductsView(APIView):
-    permissiono_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         try:
@@ -383,7 +383,7 @@ class AddProductImagesView(APIView):
 
 
 class AllProductsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         try:
@@ -408,7 +408,7 @@ class AllProductsView(APIView):
 
 
 class ProductView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request, id):
         try:
@@ -461,7 +461,7 @@ class AllCategoriesView(APIView):
 
 
 class CategoryView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request, id):
         try:
@@ -685,6 +685,6 @@ class FavouriteProductView(APIView):
 class SearchProductListAPIView(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     search_fields = ["name", "description", "category__name"]
     filter_backends = [SearchFilter, OrderingFilter]

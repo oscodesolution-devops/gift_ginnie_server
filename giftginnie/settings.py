@@ -175,7 +175,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 UNFOLD = {
     "SITE_URL": "http://google.com",
     "SIDEBAR": {"show_search": True, "show_all_applications": True, "navigation": []},
-    "DASHBOARD_CALLBACK": "giftginnie.admin_dashboard_views.dashboard_callback",
+    # "DASHBOARD_CALLBACK": "giftginnie.admin_dashboard_views.dashboard_callback",
 }
 
 
