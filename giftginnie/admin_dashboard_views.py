@@ -45,15 +45,12 @@ def dashboard_callback(request, context):
         "total_customers": total_customers_this_month,
         "total_sales": total_sales_this_month,
         "popular": popular_products,
-        'chart_data': {
-            'labels': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            'datasets': [{
-                'label': 'Sales',
-                'data': [1200, 1900, 3000, 2500, 2200, 3000, 4000],  # Replace with actual data
-                'borderColor': '#3b82f6',
-                'tension': 0.4,
-                'fill': False
-            }]
-        },
+        "table_data": {
+            "headers": ["col 1", "col 2"],
+            "rows": [
+                ["a", "b"],
+                ["c", "d"],
+            ]
+        }
     })
     return context

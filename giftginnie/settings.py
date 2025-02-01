@@ -27,6 +27,8 @@ AUTH_USER_MODEL = "users.User"
 
 INSTALLED_APPS = [
     'unfold',
+    'unfold.contrib.forms',
+    'unfold.contrib.import_export',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -43,7 +45,8 @@ INSTALLED_APPS = [
     "products",
     "orders",
     "ratings",
-    "blog"
+    "blog",
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -175,7 +178,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 UNFOLD = {
     "SITE_URL": "http://google.com",
     "SIDEBAR": {"show_search": True, "show_all_applications": True, "navigation": []},
-    # "DASHBOARD_CALLBACK": "giftginnie.admin_dashboard_views.dashboard_callback",
+    "DASHBOARD_CALLBACK": "giftginnie.admin_dashboard_views.dashboard_callback",
 }
 
 

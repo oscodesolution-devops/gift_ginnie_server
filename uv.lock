@@ -91,6 +91,15 @@ wheels = [
 ]
 
 [[package]]
+name = "diff-match-patch"
+version = "20241021"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0e/ad/32e1777dd57d8e85fa31e3a243af66c538245b8d64b7265bec9a61f2ca33/diff_match_patch-20241021.tar.gz", hash = "sha256:beae57a99fa48084532935ee2968b8661db861862ec82c6f21f4acdd6d835073", size = 39962 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/bb/2aa9b46a01197398b901e458974c20ed107935c26e44e37ad5b0e5511e44/diff_match_patch-20241021-py3-none-any.whl", hash = "sha256:93cea333fb8b2bc0d181b0de5e16df50dd344ce64828226bda07728818936782", size = 43252 },
+]
+
+[[package]]
 name = "django"
 version = "5.1.4"
 source = { registry = "https://pypi.org/simple" }
@@ -124,6 +133,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/0b/f2c024529ee4bbf8b95176eebeb86c6e695192a9ce0e91059cb83a33c1d3/django-environ-0.11.2.tar.gz", hash = "sha256:f32a87aa0899894c27d4e1776fa6b477e8164ed7f6b3e410a62a6d72caaf64be", size = 54326 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c4/f1/468b49cccba3b42dda571063a14c668bb0b53a1d5712426d18e36663bd53/django_environ-0.11.2-py2.py3-none-any.whl", hash = "sha256:0ff95ab4344bfeff693836aa978e6840abef2e2f1145adff7735892711590c05", size = 19141 },
+]
+
+[[package]]
+name = "django-import-export"
+version = "4.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "diff-match-patch" },
+    { name = "django" },
+    { name = "tablib" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/92/5e/fc63b12904019438d8c9ed2b3b04aef495997bb6aa45d8fccd9082e14bc0/django_import_export-4.3.4.tar.gz", hash = "sha256:9ba43ced4fefae614ee7e30da8fdb55d6fcf0450489e7d290299672e0830a436", size = 2220175 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/6e/3fd6d6a11f472713b3d0ea79c8353e47f839e31b206ab86898ead534ef19/django_import_export-4.3.4-py3-none-any.whl", hash = "sha256:9b56e847ddcb22c0bfbb508bc3668f8b33f95d888002e931c4039d0466270230", size = 143146 },
 ]
 
 [[package]]
@@ -208,6 +231,7 @@ dependencies = [
     { name = "django" },
     { name = "django-cors-headers" },
     { name = "django-environ" },
+    { name = "django-import-export" },
     { name = "django-unfold" },
     { name = "djangorestframework" },
     { name = "djangorestframework-simplejwt" },
@@ -227,6 +251,7 @@ requires-dist = [
     { name = "django", specifier = ">=5.1.4" },
     { name = "django-cors-headers", specifier = ">=4.6.0" },
     { name = "django-environ", specifier = ">=0.11.2" },
+    { name = "django-import-export", specifier = ">=4.3.4" },
     { name = "django-unfold", specifier = ">=0.46.0" },
     { name = "djangorestframework", specifier = ">=3.15.2" },
     { name = "djangorestframework-simplejwt", specifier = ">=5.3.1" },
@@ -560,6 +585,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e5/40/edede8dd6977b0d3da179a342c198ed100dd2aba4be081861ee5911e4da4/sqlparse-0.5.3.tar.gz", hash = "sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272", size = 84999 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a9/5c/bfd6bd0bf979426d405cc6e71eceb8701b148b16c21d2dc3c261efc61c7b/sqlparse-0.5.3-py3-none-any.whl", hash = "sha256:cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca", size = 44415 },
+]
+
+[[package]]
+name = "tablib"
+version = "3.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/cc/fe19d9c2ac1088794a51fc72f49b7226f88a0361f924fb3d17a9ec80e657/tablib-3.8.0.tar.gz", hash = "sha256:94d8bcdc65a715a0024a6d5b701a5f31e45bd159269e62c73731de79f048db2b", size = 122247 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/95/6542f54ebd90539b12ed6189cb54a6550a28407b1c503c2e55190c29a4c9/tablib-3.8.0-py3-none-any.whl", hash = "sha256:35bdb9d4ec7052232f8803908f9c7a9c3c65807188b70618fa7a7d8ccd560b4d", size = 47935 },
 ]
 
 [[package]]
