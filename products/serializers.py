@@ -111,9 +111,11 @@ class PopularProductSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "description", "category", "images", "is_liked"]
 
     def get_is_liked(self, obj):
-        return FavouriteProduct.objects.filter(
-            user=self.context["request"].user, product=obj
-        ).exists()
+        if self.context["request"].user.is_authenticated:
+            return FavouriteProduct.objects.filter(
+                user=self.context["request"].user, product=obj
+            ).exists()
+        return None
 
 
 class AddProductSerializer(serializers.ModelSerializer):
