@@ -297,9 +297,11 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.average_rating()
 
     def get_is_liked(self, obj):
-        return FavouriteProduct.objects.filter(
-            user=self.context["request"].user, product=obj
-        ).exists()
+        if self.context['request'].user.is_authenticated:
+            return FavouriteProduct.objects.filter(
+                user=self.context["request"].user, product=obj
+            ).exists()
+        return None
 
     def create(self, validated_data):
         validated_data["category"] = ProductCategory.objects.get(

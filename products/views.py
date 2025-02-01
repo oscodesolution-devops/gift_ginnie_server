@@ -203,7 +203,7 @@ class PopularProductsView(APIView):
 
 
 class PopularCategoriesView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         try:
@@ -438,7 +438,7 @@ class ProductView(APIView):
 
 
 class AllCategoriesView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         try:
