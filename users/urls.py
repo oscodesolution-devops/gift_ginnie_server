@@ -9,11 +9,8 @@ from .views import (
     AddressView,
 )
 
-
 urlpatterns = [
-    path(
-        "users/dummyToken/<str:usertype>/", DummyTokenView.as_view(), name="dummyToken"
-    ),
+    path("users/dummyToken/<str:usertype>/", DummyTokenView.as_view(), name="dummyToken"),
     path("users/auth/tokens/refresh/", TokenRefreshView.as_view(), name="refreshToken"),
     path("users/auth/sendOTP/", SendOTPView.as_view(), name="sendOTP"),
     path("users/auth/verifyOTP/", VerifyOTPView.as_view(), name="verifyOTP"),

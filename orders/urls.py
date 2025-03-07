@@ -6,18 +6,13 @@ from .views import (
     CheckoutView,
     CouponView,
     VerifyPaymentView,
-    razorpay_webhook,
-)
+    razorpay_webhook)
 
 urlpatterns = [
     path("cart/", CartView.as_view(), name="cart"),
     path("coupon/", CouponView.as_view(), name="coupon"),
     path("cart/item/", CartItemView.as_view(), name="cart-item-create"),
-    path(
-        "cart/item/<int:cart_item_id>/",
-        CartItemView.as_view(),
-        name="cart-item-update-delete",
-    ),
+    path("cart/item/<int:cart_item_id>/", CartItemView.as_view(), name="cart-item-update-delete"),
     path("cart/applyCoupon/", ApplyCouponView.as_view(), name="apply-remove-coupon"),
     path("orders/checkout/", CheckoutView.as_view(), name="checkout"),
     path("orders/verifyPayment/", VerifyPaymentView.as_view(), name="verify-payment"),
