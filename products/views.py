@@ -37,10 +37,7 @@ class CarouselView(APIView):
     def get(self, request):
         carousel_items = CarouselItem.objects.filter(is_active=True)
         serializer = CarouselItemSerializer(carousel_items, many=True)
-        return Response(
-            {"message": "Top carousel fetched successfully.", "data": serializer.data},
-            status=status.HTTP_200_OK,
-        )
+        return Response({"message": "Top carousel fetched successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
         if request.user.is_superuser or request.user.is_staff:
@@ -48,83 +45,41 @@ class CarouselView(APIView):
                 serializer = CarouselItemSerializer(data=request.data)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(
-                        {
-                            "message": "Carousel item added successfully.",
-                            "date": serializer.data,
-                        },
-                        status=status.HTTP_201_CREATED,
-                    )
+                    return Response({"message": "Carousel item added successfully.", "date": serializer.data}, status=status.HTTP_201_CREATED)
                 else:
-                    return Response(
-                        {
-                            "message": "Carousel item not added.",
-                            "data": serializer.errors,
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    return Response({"message": "Carousel item not added.", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
                 return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
     def patch(self, request, id):
         if request.user.is_superuser or request.user.is_staff:
             try:
                 if not request.data:
-                    return Response(
-                        {"message": "No data provided"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    return Response({"message": "No data provided"}, status=status.HTTP_400_BAD_REQUEST)
                 carousel_item = CarouselItem.objects.get(id=id)
-                serializer = CarouselItemSerializer(
-                    carousel_item, data=request.data, partial=True
-                )
+                serializer = CarouselItemSerializer(carousel_item, data=request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(
-                        {
-                            "message": "Carousel item updated successfully.",
-                            "data": serializer.data,
-                        },
-                        status=status.HTTP_200_OK,
-                    )
+                    return Response({"message": "Carousel item updated successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
                 else:
-                    return Response(
-                        {
-                            "message": "Carousel item not updated.",
-                            "data": serializer.errors,
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    return Response({"message": "Carousel item not updated.", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
                 return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
     def delete(self, request, id):
         if request.user.is_superuser or request.user.is_staff:
             try:
                 carousel_item = CarouselItem.objects.get(id=id)
                 carousel_item.delete()
-                return Response(
-                    {"message": "Carousel item deleted successfully."},
-                    status=status.HTTP_204_NO_CONTENT,
-                )
+                return Response({"message": "Carousel item deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
             except Exception as e:
                 return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
 class DeleteProductImagesView(APIView):
     permission_classes = [IsAdminUser]
@@ -135,37 +90,20 @@ class DeleteProductImagesView(APIView):
                 serializer = DeleteProductImagesSerializer(data=request.data)
                 if serializer.is_valid():
                     product_image_ids = request.data.get("product_image_ids")
-                    product_images = ProductImage.objects.filter(
-                        id__in=product_image_ids
-                    )
+                    product_images = ProductImage.objects.filter(id__in=product_image_ids)
                     if not product_images:
-                        return Response(
-                            {"message": "No product image found"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
+                        return Response({"message": "No product image found"}, status=status.HTTP_400_BAD_REQUEST)
                     for product_image in product_images:
-                        res = cloudinary.uploader.destroy(
-                            product_image.image.public_id, invalidate=True
-                        )
+                        res = cloudinary.uploader.destroy(product_image.image.public_id, invalidate=True)
                         # print(res)
                         product_image.delete()
-                    return Response(
-                        {"message": "Product image deleted successfully"},
-                        status=status.HTTP_200_OK,
-                    )
+                    return Response({"message": "Product image deleted successfully"}, status=status.HTTP_200_OK)
                 else:
-                    return Response(
-                        {"message": serializer.errors},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
                 return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
 class PopularProductsView(APIView):
     permission_classes = [AllowAny]
@@ -175,66 +113,28 @@ class PopularProductsView(APIView):
             popular_products = (
                 Product.objects.prefetch_related("images")
                 .all()
-                .annotate(
-                    average_rating=Avg("ratings__rating"),
-                    total_reviews=Count("ratings"),
-                )
+                .annotate(average_rating=Avg("ratings__rating"), total_reviews=Count("ratings"),)
                 .select_related("category")
                 .filter(ratings__rating__isnull=False)
                 .order_by("-average_rating")[:10]
             )
-            serializer = PopularProductSerializer(
-                popular_products, many=True, context={"request": request}
-            )
-            return Response(
-                {
-                    "message": "Popular products fetched successfully.",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_200_OK,
-            )
+            serializer = PopularProductSerializer(popular_products, many=True, context={"request": request})
+            return Response({"message": "Popular products fetched successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while fetching popular products {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            return Response({"message": f"Error occurred while fetching popular products {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class PopularCategoriesView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
         try:
-            popular_categories = (
-                ProductRating.objects.values("product__category__id")
-                .annotate(
-                    category_id=F("product__category__id"),
-                    category_name=F("product__category__name"),
-                    average_rating=Avg("rating"),
-                    total_reviews=Count("id"),
-                    category_description=F("product__category__description"),
-                    image=F("product__category__image"),
-                )
-                .order_by("-average_rating")[:10]
-            )
+            popular_categories = (ProductRating.objects.values("product__category__id")
+                .annotate(category_id=F("product__category__id"), category_name=F("product__category__name"), average_rating=Avg("rating"), total_reviews=Count("id"), category_description=F("product__category__description"), image=F("product__category__image"))
+                .order_by("-average_rating")[:10])
             serializer = PopularCategorySerializer(popular_categories, many=True)
-            return Response(
-                {
-                    "message": "Popular categories fetched successfully.",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_200_OK,
-            )
+            return Response({"message": "Popular categories fetched successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while fetching popular categories {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            return Response({"message": f"Error occurred while fetching popular categories {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class AddProductView(APIView):
     permission_classes = [IsAdminUser]
@@ -244,13 +144,7 @@ class AddProductView(APIView):
             serializer = AddProductSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response(
-                    {
-                        "message": "Product added successfully.",
-                        "data": serializer.data,
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
+                return Response({"message": "Product added successfully.", "data": serializer.data}, status=status.HTTP_201_CREATED)
             return Response(
                 {
                     "message": "Product not added.",

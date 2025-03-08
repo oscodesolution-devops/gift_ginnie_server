@@ -3,17 +3,24 @@ from django.contrib.admin import register
 from unfold.admin import ModelAdmin
 from .models import Product, ProductCategory, ProductImage, CarouselItem
 
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    # todo: Cloudary image logic to be implemented
+
 @register(Product)
 class ProductAdmin(ModelAdmin):
+    inlines = [ProductImageInline]
     list_display = ("name", "category", "created_at", "updated_at")
     search_fields = ("name", "description")
     list_filter = ("category", "created_at", "updated_at")
 
 @register(ProductImage)
 class ProductImageAdmin(ModelAdmin):
-    list_display = ("product", "image", "created_at", "updated_at")
+    list_display = ("product__name", "image", "created_at", "updated_at")
     search_fields = ("product__name", "image")
     list_filter = ("product", "created_at", "updated_at")
+    # todo: Cloudary image logic to be implemented
 
 @register(ProductCategory)
 class ProductCategoryAdmin(ModelAdmin):

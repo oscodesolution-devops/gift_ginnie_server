@@ -1,10 +1,7 @@
 from django.db import models
-
-# imoprt get user model
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
-
 
 class BlogPost(models.Model):
     title = models.CharField(max_length=100)
@@ -24,11 +21,8 @@ class BlogPost(models.Model):
         verbose_name_plural = "blog posts"
         verbose_name = "blog post"
 
-
 class BlogComment(models.Model):
-    post = models.ForeignKey(
-        BlogPost, on_delete=models.CASCADE, related_name="comments"
-    )
+    post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name="comments")
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

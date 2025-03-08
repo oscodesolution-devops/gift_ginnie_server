@@ -11,7 +11,6 @@ env.read_env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 MESSAGE_CENTRAL_CUSTOMER_ID = env("MESSAGE_CENTRAL_CUSTOMER_ID")
 MESSAGE_CENTRAL_PASSWORD_KEY = env("MESSAGE_CENTRAL_PASSWORD_KEY")
