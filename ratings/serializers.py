@@ -3,7 +3,6 @@ from .models import ProductRating
 from orders.models import Order, OrderItem
 from products.models import Product
 
-
 class ProductRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductRating

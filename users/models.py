@@ -1,11 +1,10 @@
 from django.db import models
+from cloudinary.models import CloudinaryField
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
-from cloudinary.models import CloudinaryField
-
 
 class UserManager(BaseUserManager):
     def create_user(self, phone_number=None, email=None, password=None, **extra_fields):
@@ -37,24 +36,12 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
-        return self.create_user(
-            email=email, phone_number=None, password=password, **extra_fields
-        )
-
+        return self.create_user(email=email, phone_number=None, password=password, **extra_fields)
 
 class CustomerAddress(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="addresses")
-    address_line_1 = models.CharField(
-        max_length=100,
-    )
-    address_type = models.CharField(
-        max_length=10,
-        choices=(
-            ("H", "Home"),
-            ("B", "Work"),
-            ("O", "Other"),
-        ),
-    )
+    address_line_1 = models.CharField(max_length=100)
+    address_type = models.CharField(max_length=10, choices=(("H", "Home"), ("B", "Work"), ("O", "Other")))
     address_line_2 = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=50)
     state = models.CharField(max_length=50)
@@ -68,7 +55,6 @@ class CustomerAddress(models.Model):
     def __str__(self):
         return self.address_line_1 or "Unnamed Address"
 
-
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, blank=True, null=True)
     full_name = models.CharField(max_length=150, blank=True, null=True)
@@ -79,14 +65,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(auto_now_add=True)
     profile_image = CloudinaryField("profile_image", blank=True, null=True)
     is_wholesale_customer = models.BooleanField(default=False)
-    gender = models.CharField(
-        max_length=1,
-        choices=[("M", "Male"), ("F", "Female"), ("O", "Other")],
-        default="M",
-    )
-    USERNAME_FIELD = "email"
+    gender = models.CharField(max_length=1,  choices=[("M", "Male"), ("F", "Female"), ("O", "Other")],  default="M")
 
+    USERNAME_FIELD = "email"
     # REQUIRED_FIELDS = ["phone_number"]
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"

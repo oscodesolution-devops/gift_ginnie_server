@@ -1,10 +1,7 @@
 from django.db import models
 
-
 class ProductRating(models.Model):
-    product = models.ForeignKey(
-        "products.Product", on_delete=models.CASCADE, related_name="ratings"
-    )
+    product = models.ForeignKey("products.Product", on_delete=models.CASCADE, related_name="ratings")
     rating = models.IntegerField()
     review = models.TextField(blank=True, null=True)
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)

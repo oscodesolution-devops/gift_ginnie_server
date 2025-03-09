@@ -30,7 +30,6 @@ from .serializers import (
     UpdateProductSerializer,
 )
 
-
 class CarouselView(APIView):
     permission_classes = [AllowAny]
 
@@ -145,19 +144,9 @@ class AddProductView(APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response({"message": "Product added successfully.", "data": serializer.data}, status=status.HTTP_201_CREATED)
-            return Response(
-                {
-                    "message": "Product not added.",
-                    "data": serializer.errors,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"message": "Product not added.", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
 class UpdateDeleteProductView(APIView):
     permission_classes = [IsAdminUser]
@@ -165,45 +154,19 @@ class UpdateDeleteProductView(APIView):
     def patch(self, request, id):
         if request.user.is_superuser or request.user.is_staff:
             if not request.data:
-                return Response(
-                    {"message": "No data provided"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({"message": "No data provided"}, status=status.HTTP_400_BAD_REQUEST)
             try:
                 product = Product.objects.get(id=id)
-                serializer = UpdateProductSerializer(
-                    product, data=request.data, partial=True
-                )
+                serializer = UpdateProductSerializer(product, data=request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(
-                        {
-                            "message": "Product updated successfully",
-                            "data": serializer.data,
-                        },
-                        status=status.HTTP_200_OK,
-                    )
+                    return Response({"message": "Product updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
                 else:
-                    return Response(
-                        {
-                            "message": "Product not updated.",
-                            "data": serializer.errors,
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    return Response({"message": "Product not updated.", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
-                return Response(
-                    {
-                        "message": f"Product not updated.",
-                        "data": str(e),
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({"message": f"Product not updated.", "data": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
     def delete(self, request, id):
         if request.user.is_superuser or request.user.is_staff:
@@ -211,41 +174,15 @@ class UpdateDeleteProductView(APIView):
             try:
                 product = Product.objects.get(id=id)
                 product.delete()
-                return Response(
-                    {
-                        "message": "Product deleted successfully",
-                        "data": None,
-                    },
-                    status=status.HTTP_204_NO_CONTENT,
-                )
+                return Response({"message": "Product deleted successfully", "data": None}, status=status.HTTP_204_NO_CONTENT)
             except Product.DoesNotExist:
-                return Response(
-                    {
-                        "message": "Product not found.",
-                    },
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+                return Response({"message": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
             except Product.DoesNotExist:
-                return Response(
-                    {
-                        "message": "Product not found.",
-                    },
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+                return Response({"message": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
             except Exception as e:
-                return Response(
-                    {
-                        "message": "Product not deleted.",
-                        "data": e,
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({"message": "Product not deleted.", "data": e}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
 class AddProductImagesView(APIView):
     permission_classes = [IsAdminUser]
@@ -255,26 +192,10 @@ class AddProductImagesView(APIView):
             serializer = AddProductImageSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response(
-                    {
-                        "message": "Product images added successfully.",
-                        "data": serializer.data,
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
-            return Response(
-                {
-                    "message": "Product image not added.",
-                    "data": serializer.errors,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+                return Response({"message": "Product images added successfully.", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Product image not added.", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
 class AllProductsView(APIView):
     permission_classes = [AllowAny]
@@ -282,24 +203,10 @@ class AllProductsView(APIView):
     def get(self, request):
         try:
             products = Product.objects.all()
-            serializer = ProductSerializer(
-                products, many=True, context={"request": request}
-            )
-            return Response(
-                {
-                    "message": "All products fetched successfully.",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_200_OK,
-            )
+            serializer = ProductSerializer(products, many=True, context={"request": request})
+            return Response({"message": "All products fetched successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while fetching all products {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            return Response({"message": f"Error occurred while fetching all products {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProductView(APIView):
     permission_classes = [AllowAny]
@@ -308,28 +215,11 @@ class ProductView(APIView):
         try:
             product = Product.objects.get(id=id)
             serializer = ProductSerializer(product, context={"request": request})
-            return Response(
-                {
-                    "message": "Product fetched successfully.",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_200_OK,
-            )
+            return Response({"message": "Product fetched successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
-            return Response(
-                {
-                    "message": "Product not found.",
-                },
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response({"message": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while fetching product {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            return Response({"message": f"Error occurred while fetching product {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class AllCategoriesView(APIView):
     permission_classes = [AllowAny]
@@ -338,21 +228,9 @@ class AllCategoriesView(APIView):
         try:
             query_set = ProductCategory.objects.all()
             serializer = CategorySerializer(query_set, many=True)
-            return Response(
-                {
-                    "message": "All categories fetched successfully.",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_200_OK,
-            )
+            return Response({"message": "All categories fetched successfully.", "data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while fetching all categories {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            return Response({"message": f"Error occurred while fetching all categories {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class CategoryView(APIView):
     permission_classes = [AllowAny]
@@ -362,104 +240,44 @@ class CategoryView(APIView):
             products = Product.objects.filter(category__id=id)
             category_exists = ProductCategory.objects.filter(id=id).exists()
             if not category_exists:
-                return Response(
-                    {"message": f"The category_id {id} not found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-            serializer = ProductSerializer(
-                products, many=True, context={"request": request}
-            )
-            return Response(
-                {
-                    "message": "Category found",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_200_OK,
-            )
+                return Response({"message": f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
+            serializer = ProductSerializer(products, many=True, context={"request": request})
+            return Response({"message": "Category found", "data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while fetching category {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"message": f"Error occurred while fetching category {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
         if request.user.is_superuser or request.user.is_staff:
             try:
                 category = ProductCategory.objects.get(id=id)
                 if not category:
-                    return Response(
-                        {"message": f"The category_id {id} not found"},
-                        status=status.HTTP_404_NOT_FOUND,
-                    )
+                    return Response({"message": f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
                 if category.image and category.image.public_id:
-                    res = cloudinary.uploader.destroy(
-                        category.image.public_id, invalidate=True
-                    )
+                    res = cloudinary.uploader.destroy(category.image.public_id, invalidate=True)
                     print("category image removed", res)
                 category.delete()
-                return Response(
-                    {
-                        "message": f"Category {category.name} deleted successfully",
-                    },
-                    status=status.HTTP_200_OK,
-                )
+                return Response({"message": f"Category {category.name} deleted successfully"}, status=status.HTTP_200_OK)
             except Exception as e:
-                return Response(
-                    {
-                        "message": f"Error occurred while deleting category {e}",
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({"message": f"Error occurred while deleting category {e}"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
     def patch(self, request, id):
         if request.user.is_superuser or request.user.is_staff:
             try:
                 category = ProductCategory.objects.get(id=id)
                 if not category:
-                    return Response(
-                        {"message": f"The category_id {id} not found"},
-                        status=status.HTTP_404_NOT_FOUND,
-                    )
-                serializer = CategorySerializer(
-                    category, data=request.data, partial=True
-                )
+                    return Response({"message": f"The category_id {id} not found"}, status=status.HTTP_404_NOT_FOUND)
+                serializer = CategorySerializer(category, data=request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(
-                        {
-                            "message": f"Category {serializer.data['name']} updated successfully",
-                            "data": serializer.data,
-                        },
-                        status=status.HTTP_200_OK,
-                    )
+                    return Response({"message": f"Category {serializer.data['name']} updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
                 else:
-                    return Response(
-                        {
-                            "message": f"Error occurred while updating category",
-                            "data": serializer.errors,
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    return Response({"message": f"Error occurred while updating category", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
-                return Response(
-                    {
-                        "message": f"Error occurred while updating category {e}",
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({"message": f"Error occurred while updating category {e}"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
 class CategoryViewCREATE(APIView):
     permission_classes = [IsAdminUser]
@@ -470,34 +288,13 @@ class CategoryViewCREATE(APIView):
                 serializer = CategorySerializer(data=request.data)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(
-                        {
-                            "message": f"Category {serializer.data['name']} created successfully",
-                            "data": serializer.data,
-                        },
-                        status=status.HTTP_201_CREATED,
-                    )
+                    return Response({"message": f"Category {serializer.data['name']} created successfully", "data": serializer.data}, status=status.HTTP_201_CREATED)
                 else:
-                    return Response(
-                        {
-                            "message": f"Error occurred while creating category",
-                            "data": serializer.errors,
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    return Response({"message": f"Error occurred while creating category", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
-                return Response(
-                    {
-                        "message": f"Error occurred while creating category {e}",
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                return Response({"message": f"Error occurred while creating category {e}"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(
-                {"message": "You are not authorized to perform this action."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            return Response({"message": "You are not authorized to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
 class FavouriteProductView(APIView):
     permission_classes = [IsAuthenticated]
@@ -506,75 +303,36 @@ class FavouriteProductView(APIView):
         try:
             user = request.user
             favourite_products = FavouriteProduct.objects.filter(user=user)
-            serializer = FavouriteProductSerializer(
-                favourite_products, many=True, context={"request": request}
-            )
-            return Response(
-                {
-                    "message": "Favourite products retrieved successfully",
-                    "data": serializer.data,
-                },
-                status=status.HTTP_200_OK,
-            )
+            serializer = FavouriteProductSerializer(favourite_products, many=True, context={"request": request})
+            return Response({"message": "Favourite products retrieved successfully", "data": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while retrieving favourite products {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"message": f"Error occurred while retrieving favourite products {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
         try:
             product_id = request.data.get("id")
-            serializer = FavouriteProductSerializer(
-                data=request.data, context={"request": request}
-            )
+            serializer = FavouriteProductSerializer(data=request.data, context={"request": request})
 
             if serializer.is_valid():
                 product = Product.objects.get(id=product_id)
                 if product:
                     user = request.user
-                    favourite_product = FavouriteProduct.objects.filter(
-                        user=user, product=product
-                    )
+                    favourite_product = FavouriteProduct.objects.filter(user=user, product=product)
                     if favourite_product:
                         favourite_product.delete()
-                        return Response(
-                            {
-                                "message": f"Product {product.name} unfavourited successfully",
-                            },
-                            status=status.HTTP_200_OK,
-                        )
+                        return Response({"message": f"Product {product.name} unfavourited successfully"}, status=status.HTTP_200_OK)
                     else:
-                        serializer = FavouriteProductSerializer(
-                            data=request.data, context={"request": request}
-                        )
+                        serializer = FavouriteProductSerializer(data=request.data, context={"request": request})
                         favourite_product = FavouriteProduct(user=user, product=product)
                         favourite_product.save()
-                    return Response(
-                        {
-                            "message": f"Product {product.name} favourited successfully",
-                        },
-                        status=status.HTTP_201_CREATED,
-                    )
+                    return Response({"message": f"Product {product.name} favourited successfully"}, status=status.HTTP_201_CREATED)
 
             else:
-                return Response(
-                    {"message": "Validation error", "data": serializer.errors}
-                )
+                return Response({"message": "Validation error", "data": serializer.errors})
         except Product.DoesNotExist:
-            return Response(
-                {"message": "product not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"message": "product not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response(
-                {
-                    "message": f"Error occurred while favouriting product {e}",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+            return Response({"message": f"Error occurred while favouriting product {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class SearchProductListAPIView(ListAPIView):
     queryset = Product.objects.all()
