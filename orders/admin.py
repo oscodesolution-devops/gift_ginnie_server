@@ -6,7 +6,7 @@ from unfold.contrib.import_export.forms import ExportForm, ImportForm, Selectabl
 
 @register(Order)
 class OrderAdmin(ModelAdmin, ImportExportModelAdmin):
-    imort_form_class = ImportForm
+    import_form_class = ImportForm
     export_form_class = ExportForm
     list_display = ['user', 'status', 'total_price', 'discount_applied', 'final_price', 'updated_at', 'razorpay_order_id', 'razorpay_payment_id', 'delivery_address']
     search_fields = ["user__username", "status", "total_price", "discount_applied", "final_price", "updated_at", "razorpay_order_id", "razorpay_payment_id", "delivery_address__address"]
@@ -26,9 +26,9 @@ class CartAdmin(ModelAdmin):
 @register(CartItem)
 class CartItemAdmin(ModelAdmin):
     list_display = ['cart', 'product__name', 'quantity', 'price']
-    search_fields = ["cart__user__username", "product__name"]  
+    search_fields = ["cart__user__username", "product__name"]
 
-@register(Coupon) 
+@register(Coupon)
 class CouponAdmin(ModelAdmin):
     list_display = ['code', 'discount_type', 'discount_value', 'is_active', 'valid_from', 'valid_until', 'max_usage', 'max_usage_per_user']
     search_fields = ["code", "title", "description"]
