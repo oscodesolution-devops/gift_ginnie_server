@@ -3,13 +3,13 @@ from django.db import models
 from cloudinary.models import CloudinaryField
 
 class CarouselItem(models.Model):
-    title = models.CharField(max_length=255)  # Title for the carousel item
-    description = models.TextField(blank=True, null=True)  # Optional description
-    image = CloudinaryField("carausel_image")  # Image for the carousel
-    link = models.URLField(blank=True, null=True)  # Optional link for the item
-    is_active = models.BooleanField(default=True)  # Only display active items
-    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for creation
-    order = models.PositiveIntegerField(default=0)  # To control order of items
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    image = CloudinaryField("carousel_image")
+    link = models.URLField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["order"]
@@ -55,6 +55,9 @@ class Product(models.Model):
         average_rating = ratings.aggregate(models.Avg("rating"))
         return average_rating["rating__avg"]
 
+    def __str__(self):
+        return self.name
+
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True, related_name="images")
     image = CloudinaryField("product_image")
@@ -77,3 +80,16 @@ class FavouriteProduct(models.Model):
 
     def __str__(self):
         return self.product.name
+
+class GiftForYou(models.Model):
+    product_category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name="gifts_for_you")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="gifts")
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['display_order']
+        verbose_name = "Gift For You"
+        verbose_name_plural = "Gifts For You"
+
+    def __str__(self):
+        return f"Gift: {self.product.name} for Category: {self.product_category.name}"
