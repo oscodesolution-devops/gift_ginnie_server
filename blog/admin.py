@@ -16,3 +16,4 @@ class BlogCommentAdmin(ModelAdmin):
     list_display = ['post', 'author', 'created_at', 'updated_at']
     search_fields = ["post__title", "post__body", "author__email"]
     list_filter = ["author", "created_at", "updated_at"]
+    formfield_overrides = {models.TextField: {"widget": WysiwygWidget,},}
