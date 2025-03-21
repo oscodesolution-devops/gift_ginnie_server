@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -16,6 +16,7 @@ from .models import (
     Product,
     ProductCategory,
     ProductImage,
+    GiftForYou,
 )
 from .serializers import (
     AddProductImageSerializer,
@@ -28,6 +29,7 @@ from .serializers import (
     PopularProductSerializer,
     ProductSerializer,
     UpdateProductSerializer,
+    GiftForYouSerializer,
 )
 
 class CarouselView(APIView):
@@ -340,3 +342,54 @@ class SearchProductListAPIView(ListAPIView):
     permission_classes = [AllowAny]
     search_fields = ["name", "description", "category__name"]
     filter_backends = [SearchFilter, OrderingFilter]
+
+class GiftForYouListView(APIView):
+    def get(self, request, *args, **kwargs):
+        gift_for_you_items = GiftForYou.objects.all()
+        products = []
+        for gift in gift_for_you_items:
+            product = gift.product
+            product_data = ProductSerializer(product, context={'request': request}).data
+            product_data['is_liked'] = None
+            products.append(product_data)
+
+        return Response({
+            "message": "All products in 'Gift For You' section fetched successfully.",
+            "data": products
+        })
+
+class GiftForYouCreateView(APIView):
+    def post(self, request, *args, **kwargs):
+        product_id = request.data.get('product_id')
+        category_id = request.data.get('category_id')
+        display_order = request.data.get('display_order', 0)
+        
+        try:
+            product = Product.objects.get(id=product_id)
+            category = ProductCategory.objects.get(id=category_id)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except ProductCategory.DoesNotExist:
+            return Response({"error": "Category not found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        gift_for_you, created = GiftForYou.objects.get_or_create(
+            product=product,
+            product_category=category,
+            defaults={'display_order': display_order}
+        )
+
+        if created:
+            return Response({"message": "Product added to 'Gift For You' section."}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "Product already exists in 'Gift For You' section."}, status=status.HTTP_200_OK)
+
+class GiftForYouDeleteView(APIView):
+    def delete(self, request, *args, **kwargs):
+        product_id = request.data.get('product_id')
+
+        try:
+            gift_for_you = GiftForYou.objects.get(product__id=product_id)
+            gift_for_you.delete()
+            return Response({"message": "Product removed from 'Gift For You' section."}, status=status.HTTP_204_NO_CONTENT)
+        except GiftForYou.DoesNotExist:
+            return Response({"error": "Product not found in 'Gift For You' section."}, status=status.HTTP_404_NOT_FOUND)

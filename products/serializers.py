@@ -9,6 +9,7 @@ from .models import (
     Product,
     ProductCategory,
     ProductImage,
+    GiftForYou,
 )
 import cloudinary
 import cloudinary.uploader
@@ -244,3 +245,31 @@ class FavouriteProductSerializer(serializers.ModelSerializer):
         model = FavouriteProduct
         fields = ["id", "product"]
         read_only_fields = ["product"]
+
+class GiftForYouSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    product_category = serializers.PrimaryKeyRelatedField(queryset=ProductCategory.objects.all())
+    display_order = serializers.IntegerField(min_value=0)
+
+    class Meta:
+        model = GiftForYou
+        fields = ['product', 'product_category', 'display_order']
+
+    def create(self, validated_data):
+        product = validated_data['product']
+        product_category = validated_data['product_category']
+        display_order = validated_data['display_order']
+        existing_entry = GiftForYou.objects.filter(product=product, product_category=product_category).first()
+        if existing_entry:
+            raise serializers.ValidationError("This product is already in the 'Gift For You' section.")
+
+        gift_for_you = GiftForYou.objects.create(product=product, product_category=product_category, display_order=display_order)
+        return gift_for_you
+
+    def validate(self, data):
+        product = data.get('product')
+        product_category = data.get('product_category')
+
+        if not product or not product_category:
+            raise serializers.ValidationError("Product and category must be provided.")
+        return data

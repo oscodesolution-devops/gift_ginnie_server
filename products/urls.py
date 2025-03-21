@@ -13,7 +13,10 @@ from .views import (
     ProductView,
     PopularProductsView,
     SearchProductListAPIView,
-    UpdateDeleteProductView,)
+    UpdateDeleteProductView,
+    GiftForYouListView, 
+    GiftForYouCreateView, 
+    GiftForYouDeleteView)
 
 urlpatterns = [
     path("products/carausel-items/", CarouselView.as_view(), name="carousel-items-get-post"),
@@ -32,4 +35,7 @@ urlpatterns = [
     path("products/categories/", AllCategoriesView.as_view(), name="all-categories"),
     path("products/favourite/", FavouriteProductView.as_view(), name="favourite-products"),
     path("products/searchProducts", SearchProductListAPIView.as_view(), name="search-products"),
+    path("products/gifts/", GiftForYouListView.as_view(), name="gift-list"),  
+    path("products/gifts/add/", GiftForYouCreateView.as_view(), name="add-gift"),
+    path("products/gifts/remove/", GiftForYouDeleteView.as_view(), name="remove-gift"),
 ]
