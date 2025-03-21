@@ -42,6 +42,7 @@ class Product(models.Model):
     original_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock = models.PositiveBigIntegerField(default=0)
+    is_gift = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "Product"

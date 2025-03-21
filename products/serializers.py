@@ -256,14 +256,13 @@ class GiftForYouSerializer(serializers.ModelSerializer):
         fields = ['product', 'product_category', 'display_order']
 
     def create(self, validated_data):
-        product = validated_data['product']
-        product_category = validated_data['product_category']
-        display_order = validated_data['display_order']
-        existing_entry = GiftForYou.objects.filter(product=product, product_category=product_category).first()
-        if existing_entry:
-            raise serializers.ValidationError("This product is already in the 'Gift For You' section.")
+        product = validated_data.get('product')
+        product_category = validated_data.get('product_category')
 
-        gift_for_you = GiftForYou.objects.create(product=product, product_category=product_category, display_order=display_order)
+        if GiftForYou.objects.filter(product=product, product_category=product_category).exists():
+            raise serializers.ValidationError("Gift for you already exists for this product and category.")
+
+        gift_for_you = GiftForYou.objects.create(**validated_data)
         return gift_for_you
 
     def validate(self, data):

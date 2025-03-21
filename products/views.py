@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, DestroyAPIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from ratings.models import ProductRating
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -358,38 +358,30 @@ class GiftForYouListView(APIView):
             "data": products
         })
 
-class GiftForYouCreateView(APIView):
+class GiftForYouCreateView(CreateAPIView):
+    serializer_class = GiftForYouSerializer
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
-        product_id = request.data.get('product_id')
-        category_id = request.data.get('category_id')
-        display_order = request.data.get('display_order', 0)
-        
         try:
-            product = Product.objects.get(id=product_id)
-            category = ProductCategory.objects.get(id=category_id)
+            serializer = GiftForYouSerializer(data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"message": "Product added to 'Gift For You' section.", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Product.DoesNotExist:
-            return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
-        except ProductCategory.DoesNotExist:
-            return Response({"error": "Category not found"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        gift_for_you, created = GiftForYou.objects.get_or_create(
-            product=product,
-            product_category=category,
-            defaults={'display_order': display_order}
-        )
+            return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        if created:
-            return Response({"message": "Product added to 'Gift For You' section."}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"message": "Product already exists in 'Gift For You' section."}, status=status.HTTP_200_OK)
+class GiftForYouDeleteView(DestroyAPIView):
+    queryset = GiftForYou.objects.all()
+    serializer_class = GiftForYouSerializer
+    # permission_classes = [IsAuthenticated]
 
-class GiftForYouDeleteView(APIView):
     def delete(self, request, *args, **kwargs):
-        product_id = request.data.get('product_id')
-
         try:
-            gift_for_you = GiftForYou.objects.get(product__id=product_id)
-            gift_for_you.delete()
+            instance = self.get_object()
+            self.perform_destroy(instance)
             return Response({"message": "Product removed from 'Gift For You' section."}, status=status.HTTP_204_NO_CONTENT)
-        except GiftForYou.DoesNotExist:
-            return Response({"error": "Product not found in 'Gift For You' section."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

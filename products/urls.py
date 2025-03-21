@@ -37,5 +37,5 @@ urlpatterns = [
     path("products/searchProducts", SearchProductListAPIView.as_view(), name="search-products"),
     path("products/gifts/", GiftForYouListView.as_view(), name="gift-list"),  
     path("products/gifts/add/", GiftForYouCreateView.as_view(), name="add-gift"),
-    path("products/gifts/remove/", GiftForYouDeleteView.as_view(), name="remove-gift"),
+    path("products/gifts/remove/<int:pk>/", GiftForYouDeleteView.as_view(), name="remove-gift"),
 ]
